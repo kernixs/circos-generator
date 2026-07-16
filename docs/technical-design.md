@@ -246,7 +246,7 @@ src/main/java/org/mpg/circos/
     PolarPoint.java
     AngleMapper.java
     TrackLayout.java
-    RibbonStyleCalculator.java
+    RibbonWidthCalculator.java
     package-info.java
   renderer/
     SemanticSvgRenderer.java
@@ -287,7 +287,7 @@ src/test/java/org/mpg/circos/
     AngleMapperTest.java
     CircularLayoutEngineTest.java
     TrackLayoutTest.java
-    RibbonStyleCalculatorTest.java
+    RibbonWidthCalculatorTest.java
   renderer/
     SemanticSvgRendererTest.java
     SvgIdEncoderTest.java
@@ -620,6 +620,11 @@ halfWidthBp = 900000 + n * 250000
 fillAlpha = min(0.95, 0.55 + 0.04 * n)
 borderAlpha = min(0.98, fillAlpha + 0.08)
 ```
+
+`RibbonWidthCalculator` in `layout/` owns only `n` and `halfWidthBp`, which
+affect endpoint geometry. `CompatibilityTheme` in `renderer/` owns
+`fillAlpha`, `borderAlpha`, colors, and other presentation values. Layout types
+contain no CSS, SVG, color, opacity, stroke, or theme decisions.
 
 Each endpoint ribbon interval is
 `[max(0, position-halfWidthBp), min(chromosomeLength,

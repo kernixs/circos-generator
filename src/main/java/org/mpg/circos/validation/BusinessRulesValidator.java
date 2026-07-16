@@ -26,8 +26,8 @@ final class BusinessRulesValidator {
                         "/links/" + i + "/sourceResultId", "patient links require sourceResultId"));
             }
         } else {
-            if (plot.sourceResultIds().size() < 2) errors.add(new ValidationError("COHORT_SCOPE_INVALID",
-                    "/sourceResultIds", "cohort mode requires at least two source result IDs"));
+            if (plot.sourceResultIds().isEmpty()) errors.add(new ValidationError("COHORT_SCOPE_INVALID",
+                    "/sourceResultIds", "cohort mode requires at least one source result ID"));
             for (int i = 0; i < plot.links().size(); i++) {
                 var link = plot.links().get(i);
                 if (link.aggregate() == null) errors.add(new ValidationError("COHORT_AGGREGATE_REQUIRED",

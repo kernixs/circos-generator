@@ -16,7 +16,7 @@ class GoldenJsonFixturesTest {
 
     static Stream<String> examples() {
         return Stream.of("patient-bcr-abl1.json", "gains-and-losses.json", "crossing-links.json",
-                "cohort-aggregate.json", "empty-categories.json", "chromosome-aliases.json");
+                "cohort-aggregate.json", "cohort-single-result.json", "empty-categories.json",
+                "chromosome-aliases.json");
     }
 }
-

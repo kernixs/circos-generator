@@ -5,10 +5,17 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 import org.mpg.circos.CircosApplication;
 import org.mpg.circos.TestFixtures;
 
 class BusinessRulesValidatorTest {
+    @Test
+    void acceptsCohortWithOneRepresentedSourceResult() {
+        assertDoesNotThrow(() -> new CircosApplication()
+                .readAndValidate(TestFixtures.open("/examples/cohort-single-result.json")));
+    }
+
     @ParameterizedTest
     @MethodSource("invalidRules")
     void rejectsInvalidRules(String fixture) {
@@ -24,4 +31,3 @@ class BusinessRulesValidatorTest {
                 Arguments.of("/fixtures/invalid/gain-copy-number-below-three.json"));
     }
 }
-
