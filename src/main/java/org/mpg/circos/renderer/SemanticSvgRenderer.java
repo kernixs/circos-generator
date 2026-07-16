@@ -71,18 +71,9 @@ public final class SemanticSvgRenderer {
 
     private void appendBackground(StringBuilder svg, String plotToken, PlotGeometry geometry) {
         svg.append("    <g id=\"circos-background-").append(plotToken).append("\" class=\"circos-background\">\n");
-        int trackIndex = 1;
-        for (var ring : geometry.tracks().backgroundTracks()) {
-            for (var sector : geometry.sectors()) {
-                AnnularPath path = new AnnularPath(ring.innerRadius(), ring.outerRadius(),
-                        sector.startAngle(), sector.endAngle());
-                svg.append("      <path class=\"track-background\" data-background-track=\"")
-                        .append(trackIndex).append("\" data-chromosome=\"")
-                        .append(XmlEscaper.attribute(sector.chromosome())).append("\" d=\"")
-                        .append(elements.annularPath(geometry.centerX(), geometry.centerY(), path)).append("\"/>\n");
-            }
-            trackIndex++;
-        }
+        svg.append("      <rect class=\"circos-canvas\" x=\"0\" y=\"0\" width=\"")
+                .append(elements.format(geometry.viewBoxSize())).append("\" height=\"")
+                .append(elements.format(geometry.viewBoxSize())).append("\" fill=\"#ffffff\"/>\n");
         svg.append("    </g>\n");
     }
 
@@ -104,7 +95,10 @@ public final class SemanticSvgRenderer {
     private void appendTracks(StringBuilder svg, String plotToken, CircosPlot plot, PlotGeometry geometry,
                               Map<String, PlotGeometry.SegmentGeometry> shapes) {
         svg.append("    <g id=\"circos-tracks-").append(plotToken).append("\" class=\"circos-tracks\">\n")
-                .append("      <g id=\"track-backgrounds-").append(plotToken).append("\" class=\"track-backgrounds\"/>\n");
+                .append("      <g id=\"track-backgrounds-").append(plotToken)
+                .append("\" class=\"track-backgrounds\">\n");
+        appendBaseTrackBackgrounds(svg, geometry);
+        svg.append("      </g>\n");
         appendSegmentTrackBackground(svg, "gain", plotToken, geometry, geometry.tracks().gainTrack());
         appendSegmentTrackBackground(svg, "loss", plotToken, geometry, geometry.tracks().lossTrack());
         svg.append("      <g id=\"track-gains-").append(plotToken).append("\" class=\"track track-gains\">\n");
@@ -113,6 +107,27 @@ public final class SemanticSvgRenderer {
                 .append("\" class=\"track track-losses\">\n");
         appendSegments(svg, plotToken, plot, geometry, shapes, EventType.LOSS);
         svg.append("      </g>\n    </g>\n");
+    }
+
+    private void appendBaseTrackBackgrounds(StringBuilder svg, PlotGeometry geometry) {
+        int trackIndex = 1;
+        for (var ring : geometry.tracks().backgroundTracks()) {
+            for (var sector : geometry.sectors()) {
+                AnnularPath path = new AnnularPath(ring.innerRadius(), ring.outerRadius(),
+                        sector.startAngle(), sector.endAngle());
+                svg.append("        <path class=\"track-background\" data-background-track=\"")
+                        .append(trackIndex).append("\"")
+                        .append(attr("data-chromosome", sector.chromosome())).append(" d=\"")
+                        .append(elements.annularPath(geometry.centerX(), geometry.centerY(), path)).append("\"/>\n");
+                double middleRadius = ring.innerRadius() + (ring.outerRadius() - ring.innerRadius()) / 2.0;
+                svg.append("        <path class=\"track-midline\" fill=\"none\" stroke=\"#ffffff\"")
+                        .append(" stroke-width=\"1.8\" d=\"")
+                        .append(elements.arcPath(geometry.centerX(), geometry.centerY(), middleRadius,
+                                sector.startAngle(), sector.endAngle()))
+                        .append("\"/>\n");
+            }
+            trackIndex++;
+        }
     }
 
     private void appendSegmentTrackBackground(StringBuilder svg, String type, String plotToken,
@@ -221,9 +236,9 @@ public final class SemanticSvgRenderer {
 
     private void appendLegend(StringBuilder svg, String plotToken) {
         svg.append("    <g id=\"circos-legend-").append(plotToken).append("\" class=\"circos-legend\">\n");
-        legendItem(svg, 24, 610, theme.gainColor(), "Gain / Duplication / Amplification");
-        legendItem(svg, 24, 628, theme.lossColor(), "Loss / Deletion");
-        legendItem(svg, 24, 646, theme.linkColor(), "Translocation");
+        legendItem(svg, 70, 500, theme.gainColor(), "Gain / Duplication / Amplification");
+        legendItem(svg, 70, 518, theme.lossColor(), "Loss / Deletion");
+        legendItem(svg, 70, 536, theme.linkColor(), "Translocation");
         svg.append("    </g>\n");
     }
 
@@ -274,7 +289,7 @@ public final class SemanticSvgRenderer {
                 case '\r' -> escaped.append("\\r");
                 case '\t' -> escaped.append("\\t");
                 default -> {
-                    if (codePoint < 0x20) escaped.append(String.format("\\u%04x", codePoint));
+                    if (codePoint < 0x20) escaped.append(String.format(java.util.Locale.ROOT, "\\u%04x", codePoint));
                     else escaped.appendCodePoint(codePoint);
                 }
             }

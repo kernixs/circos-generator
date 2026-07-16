@@ -315,7 +315,9 @@ will expose overloads that (a) validate and render an `InputStream`, (b) validat
 and render an already-constructed `CircosPlot`, and (c) write to a caller-owned
 `OutputStream`/`Writer` without closing it. Each render call accepts immutable
 `RenderOptions` containing renderer-only limits such as the positive maximum
-event count. The API returns or writes only SVG and typed validation/generation
+event count. The library default is 20,000 total events, counted as
+`segments.size + links.size`; callers may supply another positive ceiling. The
+API returns or writes only SVG and typed validation/generation
 failures; it has no search, database, transport, GUI, or contributor-resolution
 types.
 

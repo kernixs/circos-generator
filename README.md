@@ -14,3 +14,15 @@ Run the validation suite with:
 ```text
 ./mvnw test
 ```
+
+Generate deterministic SVG with the database-independent CLI:
+
+```text
+./mvnw -q exec:java \
+  -Dexec.mainClass=org.mpg.circos.cli.CircosCli \
+  -Dexec.args="--input src/test/resources/examples/gains-and-losses.json --output examples/generated/patient-gains-losses.svg"
+```
+
+Use `--output -` to write SVG to standard output. The CLI only reads the
+versioned plot contract; it performs no database queries, cohort aggregation,
+contributor resolution, or GUI/viewer behavior.

@@ -78,7 +78,12 @@ public final class CircularLayoutEngine {
             SectorGeometry sector = requiredSector(sectors, segment.interval().chromosome());
             double start = angleMapper.mapBoundary(sector, segment.interval().start());
             double end = angleMapper.mapBoundary(sector, segment.interval().end());
-            TrackLayout.Ring ring = segment.eventType() == EventType.GAIN ? tracks.gainTrack() : tracks.lossTrack();
+            TrackLayout.Ring ring = switch (segment.eventType()) {
+                case GAIN -> tracks.gainTrack();
+                case LOSS -> tracks.lossTrack();
+                case TRANSLOCATION -> throw new CircosGenerationException(
+                        "Unsupported segment event type: " + segment.eventType().value());
+            };
             double outer = ring.outerRadius();
             if (segment.eventType() == EventType.GAIN) {
                 double value = Math.min(5.8, Math.max(3.2, segment.copyNumber()));

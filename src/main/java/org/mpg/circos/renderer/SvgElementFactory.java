@@ -36,6 +36,14 @@ public final class SvgElementFactory {
                 + point(sourceEnd) + " Z";
     }
 
+    public String arcPath(double centerX, double centerY, double radius, double startAngle, double endAngle) {
+        PolarPoint start = PolarPoint.from(centerX, centerY, radius, startAngle);
+        PolarPoint end = PolarPoint.from(centerX, centerY, radius, endAngle);
+        int largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+        return "M " + point(start) + " A " + format(radius) + " " + format(radius)
+                + " 0 " + largeArc + " 1 " + point(end);
+    }
+
     public String point(PolarPoint point) {
         return format(point.x()) + " " + format(point.y());
     }

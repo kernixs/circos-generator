@@ -3,13 +3,15 @@ package org.mpg.circos.cli;
 import org.mpg.circos.CircosApplication;
 import org.mpg.circos.CircosGenerationException;
 import org.mpg.circos.model.CircosPlot;
+import org.mpg.circos.renderer.SvgDocument;
 import org.mpg.circos.validation.ValidationException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public final class CircosCli {
     private CircosCli() {}
@@ -25,9 +27,7 @@ public final class CircosCli {
             return 2;
         }
         InputStream input = null;
-        OutputStream output = null;
         boolean closeInput = false;
-        boolean closeOutput = false;
         try {
             input = "-".equals(parsed.input()) ? System.in : Files.newInputStream(Path.of(parsed.input()));
             closeInput = input != System.in;
@@ -37,9 +37,9 @@ public final class CircosCli {
                 out.println("Validated plotId=" + plot.plotId() + " mode=" + plot.mode().value()
                         + " assembly=" + plot.assemblyId());
             } else {
-                output = "-".equals(parsed.output()) ? out : Files.newOutputStream(Path.of(parsed.output()));
-                closeOutput = output != out;
-                application.render(input).writeTo(output);
+                SvgDocument document = application.render(input);
+                if ("-".equals(parsed.output())) document.writeTo(out);
+                else writeAtomically(document, Path.of(parsed.output()));
             }
             return 0;
         } catch (ValidationException e) {
@@ -48,16 +48,34 @@ public final class CircosCli {
         } catch (CircosGenerationException e) {
             err.println("Generation failure: " + e.getMessage());
             return 4;
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             err.println("Input failure: " + e.getMessage());
             return 5;
         } finally {
             try {
-                if (closeOutput && output != null) output.close();
                 if (closeInput && input != null) input.close();
             } catch (IOException e) {
                 err.println("Close failure: " + e.getMessage());
             }
+        }
+    }
+
+    private static void writeAtomically(SvgDocument document, Path destination) throws IOException {
+        Path absoluteDestination = destination.toAbsolutePath();
+        Path temporary = Files.createTempFile(absoluteDestination.getParent(),
+                "." + absoluteDestination.getFileName() + ".", ".tmp");
+        try {
+            try (var output = Files.newOutputStream(temporary)) {
+                document.writeTo(output);
+            }
+            try {
+                Files.move(temporary, absoluteDestination, StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temporary, absoluteDestination, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temporary);
         }
     }
 
