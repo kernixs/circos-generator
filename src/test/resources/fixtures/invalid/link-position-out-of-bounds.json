@@ -1,0 +1,1 @@
+{"schemaVersion":"1.0","plotId":"bad","mode":"patient","assemblyId":"GRCh38","sourceResultIds":["r"],"segments":[],"links":[{"id":"l","eventGroupId":null,"source":{"segmentId":"s1","chromosome":"1","position":248956422},"target":{"segmentId":"s2","chromosome":"2","position":0},"sourceResultId":"r","eventType":"translocation","confidence":null}]}

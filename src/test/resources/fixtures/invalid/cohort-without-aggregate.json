@@ -1,0 +1,1 @@
+{"schemaVersion":"1.0","plotId":"invalid-cohort","mode":"cohort","assemblyId":"GRCh38","coordinateConvention":"ZERO_BASED_HALF_OPEN","sourceResultIds":["r1","r2"],"segments":[],"links":[{"id":"l","eventGroupId":null,"source":{"segmentId":"a","chromosome":"1","position":10},"target":{"segmentId":"b","chromosome":"2","position":20},"eventType":"translocation","confidence":null}]}
