@@ -19,7 +19,7 @@ class ReferenceValidatorTest {
     static Stream<Arguments> invalidReferences() {
         return Stream.of(
                 Arguments.of("/fixtures/invalid/duplicate-segment-id.json", "reference.segment.duplicate"),
-                Arguments.of("/fixtures/invalid/unknown-source-result.json", "reference.sourceResult.unresolved"));
+                Arguments.of("/fixtures/invalid/unknown-source-result.json", "reference.sourceResult.unresolved"),
+                Arguments.of("/fixtures/invalid/unknown-link-source-result.json", "reference.sourceResult.unresolved"));
     }
 }
-

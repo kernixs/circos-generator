@@ -25,6 +25,10 @@ final class ReferenceValidator {
             var link = plot.links().get(i);
             if (!linkIds.add(link.id())) errors.add(new ValidationError("DUPLICATE_LINK_ID",
                     "/links/" + i + "/id", "Link ID is duplicated"));
+            if (link.sourceResultId() != null && !sourceIds.contains(link.sourceResultId())) {
+                errors.add(new ValidationError("reference.sourceResult.unresolved",
+                        "/links/" + i + "/sourceResultId", "sourceResultId is not declared at root"));
+            }
         }
         return errors;
     }
