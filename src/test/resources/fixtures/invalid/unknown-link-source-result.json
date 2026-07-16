@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "plotId": "invalid-link-source-result",
+  "label": "Invalid link source result",
+  "mode": "patient",
+  "assemblyId": "GRCh38",
+  "coordinateConvention": "ZERO_BASED_HALF_OPEN",
+  "sourceResultIds": ["r1"],
+  "segments": [
+    {"id": "s1", "sourceResultId": "r1", "eventGroupId": null, "interval": {"chromosome": "1", "start": 100, "end": 200}, "eventType": "loss", "copyNumber": null, "confidence": null},
+    {"id": "s2", "sourceResultId": "r1", "eventGroupId": null, "interval": {"chromosome": "2", "start": 300, "end": 400}, "eventType": "loss", "copyNumber": null, "confidence": null}
+  ],
+  "links": [
+    {"id": "l1", "eventGroupId": null, "source": {"segmentId": "s1", "chromosome": "1", "position": 150}, "target": {"segmentId": "s2", "chromosome": "2", "position": 350}, "sourceResultId": "missing", "eventType": "translocation", "confidence": null}
+  ]
+}

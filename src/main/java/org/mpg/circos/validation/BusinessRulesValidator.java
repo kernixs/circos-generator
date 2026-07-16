@@ -26,8 +26,8 @@ final class BusinessRulesValidator {
                         "/links/" + i + "/sourceResultId", "patient links require sourceResultId"));
             }
         } else {
-            if (plot.sourceResultIds().size() < 2) errors.add(new ValidationError("COHORT_SCOPE_INVALID",
-                    "/sourceResultIds", "cohort mode requires at least two source result IDs"));
+            if (plot.sourceResultIds().isEmpty()) errors.add(new ValidationError("COHORT_SCOPE_INVALID",
+                    "/sourceResultIds", "cohort mode requires at least one source result ID"));
             for (int i = 0; i < plot.links().size(); i++) {
                 var link = plot.links().get(i);
                 if (link.aggregate() == null) errors.add(new ValidationError("COHORT_AGGREGATE_REQUIRED",
@@ -39,6 +39,11 @@ final class BusinessRulesValidator {
         }
         for (int i = 0; i < plot.segments().size(); i++) {
             var segment = plot.segments().get(i);
+            if (segment.eventType() != EventType.GAIN && segment.eventType() != EventType.LOSS) {
+                errors.add(new ValidationError("SEGMENT_EVENT_TYPE_INVALID", "/segments/" + i + "/eventType",
+                        "segment eventType must be gain or loss"));
+                continue;
+            }
             if (segment.eventType() == EventType.GAIN && (segment.copyNumber() == null || segment.copyNumber() < 3)) {
                 errors.add(new ValidationError("GAIN_COPY_NUMBER_INVALID", "/segments/" + i + "/copyNumber",
                         "absolute gain copyNumber must be at least 3"));

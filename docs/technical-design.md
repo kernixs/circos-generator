@@ -19,10 +19,13 @@ validate versioned JSON, calculate the circular layout, and emit the complete
 SVG. The browser viewer will only attach behavior to that SVG; it will not
 recalculate chromosomes, angles, tracks, endpoints, ribbons, or paths.
 
-The rendering core will have no dependency on HTML, JavaScript, HTTP, JDBC,
-Swing, JavaFX, H2, PostgreSQL, patient databases, or the MPG application. It
-will accept plain domain objects and return an SVG document/string or write it
-to a caller-provided `OutputStream`/`Writer`.
+The rendering core will have no dependency on HTML, JavaScript, HTTP/REST,
+JDBC, FileMaker, Swing, JavaFX, H2, PostgreSQL, patient databases, the MPG
+application, or any specific GUI. It exposes a stable Java API that accepts
+plain, database-independent domain objects and returns an SVG document/string
+or writes it to a caller-provided `OutputStream`/`Writer`. Whether a future
+application invokes that API directly, through REST, or through another adapter
+is deliberately undecided and cannot change the rendering contract.
 
 Visual compatibility targets are:
 
@@ -44,12 +47,13 @@ explicit cohort aggregation intentionally supersede legacy behavior. If a
 future external reference conflicts with this document, this document controls
 until it is revised and approved.
 
-Out of scope for the first implementation are databases and adapters, JDBC,
-HTTP/REST, Docker, GUI frameworks, patient data, cohort ranking/selection,
-reimplementation of `circlize`, and MPG callbacks beyond emitting opaque IDs.
+Out of scope for the first implementation are databases and integration
+adapters, JDBC, HTTP/REST, FileMaker, Docker, GUI frameworks, patient data,
+cohort ranking/selection, reimplementation of `circlize`, and application-
+specific callbacks beyond emitting opaque IDs.
 In particular, the renderer will not reproduce the legacy cohort comparator
 bug, the 50/100-row link limiting policy, or the GUI's current-page cohort scope.
-Those are producer-selection concerns. The renderer validates and draws exactly
+Those are caller-selection concerns. The renderer validates and draws exactly
 the already-selected records it receives in deterministic input order.
 
 ## 2. Architecture and dependency direction
@@ -63,7 +67,7 @@ fixture/path -> CLI -> CircosApplication -> parsing/schema validation -> model
 assembly resources -> assembly lookup ----------+----------- domain validation
                                                                       |
                                                                       v
-                                                             geometry -> renderer
+                                                               layout -> renderer
                                                                       |
                                                                       v
                                           CLI output path <- semantic SVG
@@ -77,8 +81,8 @@ No package may depend on `viewer/`. In production code, dependencies are:
 ```text
 model <- assembly
 model <- validation -> assembly
-model <- geometry -> assembly
-model <- renderer -> geometry, assembly
+model <- layout -> assembly
+model <- renderer -> layout, assembly
 renderer, validation, model <- CircosApplication <- cli
 ```
 
@@ -93,10 +97,10 @@ More specifically:
 - **Assembly resources** load immutable chromosome names, aliases, order, and
   lengths from classpath JSON. They normalize accepted input aliases to
   canonical names and reject unknown/ambiguous names.
-- **Geometry** transforms validated genomic coordinates into deterministic
+- **Layout** transforms validated genomic coordinates into deterministic
   sector, track, marker, and ribbon geometry. It does not serialize XML or know
   about browser interaction.
-- **Renderer** turns geometry plus semantic model data into an SVG scene and
+- **Renderer** turns layout geometry plus semantic model data into an SVG scene and
   serializes safe XML. It owns visual styles and semantic SVG attributes, but
   not domain validation or layout calculations.
 - **Viewer** is static HTML/CSS/JavaScript. It loads or embeds Java-produced SVG
@@ -110,13 +114,70 @@ More specifically:
 
 JSON parsing and JSON Schema evaluation live at the application boundary, not
 inside the domain model. A thin public facade coordinates them so library
-callers do not need to assemble the pipeline manually.
+callers do not need to assemble the pipeline manually. Its public methods accept
+only streams, paths, or project-owned domain types; they never accept JDBC
+result sets, FileMaker records, HTTP request objects, GUI table models, or
+application-specific search objects.
 
 The development CLI is an outer adapter in the same Maven module. It depends on
 the public `CircosApplication` facade and standard stream/path APIs only. The
-facade, model, validation, assembly, geometry, and renderer packages have no
+facade, model, validation, assembly, layout, and renderer packages have no
 dependency on `cli`; CLI argument handling and process exit codes cannot leak
 into the rendering core.
+
+### 2.1 Caller responsibilities
+
+The caller or a future integration adapter owns every decision that depends on
+an application, database, or search workflow. Before invoking the renderer it
+must:
+
+- capture a fixed search snapshot when generation is requested; a patient
+  caller expands the selected row to all eligible findings for its one source
+  result, while a cohort caller supplies either the complete search result or
+  the explicitly selected rows, never only a visible pagination page;
+- retain only supported gains, losses, and translocation connections and keep
+  all other finding types outside the plot contract;
+- avoid invoking generation when no eligible events remain and report the
+  included/excluded counts in its own user interface;
+- require the user or source workflow to choose exactly one genome build for a
+  plot, convert the source coordinate convention explicitly, and never mix
+  assemblies or request renderer-side liftover;
+- assign stable opaque finding, segment, link, result, event-group, plot, and
+  cohort-aggregate IDs, and deduplicate records by stable finding identity
+  before constructing the input;
+- keep names, medical-record numbers, and other clinical identity out of IDs,
+  labels, metadata, and all other renderer input fields;
+- preserve individual cohort CNV segments rather than merging them into a
+  density track;
+- group cohort connections by a trusted source event/group identity, falling
+  back to exact normalized endpoint identity when no such grouping exists, and
+  calculate explicit event, patient, and sample counts;
+- assign each cohort connection a stable opaque aggregate ID and retain the
+  aggregate-to-contributing-findings mapping outside the JSON and SVG; and
+- apply any application-specific input-size policy early enough to let a user
+  refine an oversized search. No caller may silently truncate or rank away
+  eligible events while presenting the result as complete.
+
+The caller is also responsible for synchronizing opaque selection events with
+its table or details view. None of these responsibilities authorizes an MPG-,
+FileMaker-, JDBC-, REST-, or GUI-specific implementation in this repository.
+
+### 2.2 Renderer and viewer responsibilities
+
+The rendering library owns contract parsing, schema dispatch, domain and
+assembly validation, deterministic layout, safe semantic SVG, and typed
+failures. It independently rejects duplicate IDs, unresolved references,
+invalid coordinates, unsupported assemblies, invalid cohort counts, and inputs
+above its configured safety ceiling. This validation is defensive; it does not
+query, filter, aggregate, deduplicate, repair, rank, liftover, or infer caller
+data.
+
+For every accepted input, the renderer draws all supplied segments and links.
+It never silently skips an invalid event or truncates a large plot. The generic
+viewer adds stateless hover, single selection, keyboard interaction, dimming,
+endpoint emphasis, zoom/pan gestures, and programmatic reset/export without
+changing membership or geometry. It exposes opaque selection identities only;
+it cannot resolve a cohort aggregate to contributing findings.
 
 ## 3. Proposed repository structure
 
@@ -127,14 +188,12 @@ pom.xml
 README.md
 docs/
   technical-design.md
-  json-contract.md
-  semantic-svg-contract.md
-  compatibility-notes.md
 src/test/resources/examples/
   patient-bcr-abl1.json
   gains-and-losses.json
   crossing-links.json
   cohort-aggregate.json
+  cohort-single-result.json
   empty-categories.json
 viewer/
   index.html
@@ -143,6 +202,8 @@ viewer/
   README.md
 src/main/java/org/mpg/circos/
   CircosApplication.java
+  CircosGenerationException.java
+  RenderOptions.java
   cli/
     CircosCli.java
   model/
@@ -164,6 +225,7 @@ src/main/java/org/mpg/circos/
     CoordinateValidator.java
     ReferenceValidator.java
     BusinessRulesValidator.java
+    InputSizeValidator.java
     DomainValidator.java
     ValidationError.java
     ValidationException.java
@@ -174,7 +236,7 @@ src/main/java/org/mpg/circos/
     AssemblyRepository.java
     ClasspathAssemblyRepository.java
     ChromosomeNormalizer.java
-  geometry/
+  layout/
     CircularLayoutEngine.java
     LayoutParameters.java
     PlotGeometry.java
@@ -184,7 +246,8 @@ src/main/java/org/mpg/circos/
     PolarPoint.java
     AngleMapper.java
     TrackLayout.java
-    RibbonStyleCalculator.java
+    RibbonWidthCalculator.java
+    package-info.java
   renderer/
     SemanticSvgRenderer.java
     SvgDocument.java
@@ -193,8 +256,6 @@ src/main/java/org/mpg/circos/
     XmlEscaper.java
     RenderTheme.java
     CompatibilityTheme.java
-  layout/
-    package-info.java
 src/main/resources/
   genomes/
     grch37.chromosomes.json
@@ -203,6 +264,8 @@ src/main/resources/
     circos-plot-1.0.schema.json
 src/test/java/org/mpg/circos/
   CircosApplicationTest.java
+  CircosApplicationRenderTest.java
+  CircosGenerationExceptionTest.java
   cli/
     CircosCliTest.java
   validation/
@@ -213,12 +276,23 @@ src/test/java/org/mpg/circos/
     CoordinateValidatorTest.java
     ReferenceValidatorTest.java
     BusinessRulesValidatorTest.java
+    InputSizeValidatorTest.java
     DomainValidatorTest.java
     DeterministicValidationErrorsTest.java
     GoldenJsonFixturesTest.java
   assembly/
     ClasspathAssemblyRepositoryTest.java
     ChromosomeNormalizerTest.java
+  layout/
+    AngleMapperTest.java
+    CircularLayoutEngineTest.java
+    TrackLayoutTest.java
+    RibbonWidthCalculatorTest.java
+  renderer/
+    SemanticSvgRendererTest.java
+    SvgIdEncoderTest.java
+    SvgSecurityTest.java
+    DeterministicSvgTest.java
 src/test/resources/
   fixtures/invalid/
 ```
@@ -236,6 +310,17 @@ for later demonstration assets.
 Maven artifact will be a plain reusable JAR. The viewer remains outside the JAR
 and can be served by any static file server during development.
 
+Phase 2 extends that same facade rather than adding an integration layer. It
+will expose overloads that (a) validate and render an `InputStream`, (b) validate
+and render an already-constructed `CircosPlot`, and (c) write to a caller-owned
+`OutputStream`/`Writer` without closing it. Each render call accepts immutable
+`RenderOptions` containing renderer-only limits such as the positive maximum
+event count. The library default is 20,000 total events, counted as
+`segments.size + links.size`; callers may supply another positive ceiling. The
+API returns or writes only SVG and typed validation/generation
+failures; it has no search, database, transport, GUI, or contributor-resolution
+types.
+
 `CircosCli` is the database-independent development harness. Its Phase 1
 invocation is:
 
@@ -249,7 +334,7 @@ It reads one JSON payload from the input path (or `-` for standard input), calls
 only the public facade, and validates the payload without writing SVG. It emits
 diagnostics to standard error and uses stable Phase 1 process codes: 0 success,
 2 command usage, 3 schema/domain validation (including version or assembly
-rejection), and 5 input/output failure. Geometry/rendering code and its future
+rejection), and 5 input/output failure. Layout/rendering code and its future
 exit code are deferred. It performs no SVG construction, database access,
 network access, aggregation, or viewer enhancement.
 
@@ -271,7 +356,6 @@ Every input field belongs to exactly one classification:
 - **P** — required for current visual parity
 - **I** — preserved for interaction
 - **A** — cohort aggregation metadata
-- **C** — optional future clone data
 
 “Required” below means required by JSON Schema. A nullable value is still
 present and explicit. Fields omitted from a conditional branch are forbidden,
@@ -283,7 +367,7 @@ not ignored.
 |---|---|---:|:---:|---|
 | `schemaVersion` | string, const `1.0` | yes | I | Contract dispatch/evolution key |
 | `plotId` | opaque string | yes | I | Stable external plot identifier |
-| `label` | string | no | I | Optional display/export metadata; escaped but not visibly drawn in V1 |
+| `label` | string | no | I | Optional nonclinical metadata; escaped but not visibly drawn in V1 |
 | `mode` | `patient` or `cohort` | yes | P | Selects link aggregation rules |
 | `assemblyId` | `GRCh37`, `hg19`, `GRCh38`, or `hg38` | yes | P | Genome assembly lookup key; normalized to GRCh ID |
 | `coordinateConvention` | `ZERO_BASED_HALF_OPEN` | no | P | Optional wire value; omitted input defaults to the Phase 1 enum value |
@@ -298,8 +382,17 @@ endpoint segment IDs are preserved external references and need not occur in the
 plotted `segments` array. Empty arrays are valid so empty categories and empty
 plots are safe.
 
-Clone fields are deliberately absent from the Phase 1 JSON Schema and model.
-They will be introduced only with a later approved contract revision.
+Patient mode requires exactly one source result ID. Cohort mode requires one or
+more source result IDs represented by its eligible events; cohort mode describes
+the originating search workflow, not a minimum cardinality of two. A cohort
+search whose eligible events all belong to one result therefore remains a valid
+cohort plot. Callers do not invoke generation when both event arrays are empty,
+although the standalone contract continues to accept an empty synthetic plot
+for deterministic rendering and testing.
+
+The V1 JSON Schema, Java model, semantic SVG, viewer API, and callback payloads
+contain no clone fields or clone behavior. Adding them would require a later
+versioned contract revision and separate approval.
 
 ### 4.3 Segment object
 
@@ -309,7 +402,7 @@ They will be introduced only with a later approved contract revision.
 | `sourceResultId` | opaque string | yes | I | Owning source result; must appear at root |
 | `eventGroupId` | opaque string or null | yes | I | Groups related visual events when supplied |
 | `interval` | genomic interval | yes | P | Canonicalized during validation |
-| `eventType` | `gain` or `loss` | yes | P | Track/category behavior; producer normalizes legacy aliases |
+| `eventType` | `gain` or `loss` | yes | P | Track/category behavior; caller normalizes source aliases |
 | `copyNumber` | integer or null | yes | P | Explicit unknown is `null`; never coerced to zero |
 | `confidence` | string or null | yes | I | Source category such as `HIGH`; explicit unknown is `null` |
 | `label` | string | no | I | Tooltip/display metadata |
@@ -319,7 +412,7 @@ V1 defines copy number as absolute integer copy number. For `gain`,
 domain-validation error; the renderer never reclassifies them or silently
 reverses radial bounds. For `loss`, copy number may be null because its visual
 appearance does not use the value. Unknown copy number never implies loss or
-numeric zero. A future producer using relative/log-ratio copy number requires a
+numeric zero. A future caller using relative/log-ratio copy number requires a
 new documented contract convention rather than weakening this rule. Confidence
 is a bounded, display-safe
 opaque category rather than an invented numeric score; V1 preserves values such
@@ -342,7 +435,7 @@ does not have to appear here because the current pipeline does not plot its
 
 | Field | Type | Required | Class | Meaning |
 |---|---|---:|:---:|---|
-| `id` | opaque string | yes | I | Link external ID; a cohort uses a new stable aggregate ID, never a representative raw-link ID |
+| `id` | opaque string | yes | I | Link external ID; the caller supplies a stable aggregate ID for a cohort link, never a representative raw-link ID |
 | `eventGroupId` | opaque string or null | yes | I | Groups link with related events when supplied |
 | `source` | link endpoint object | yes | P | Source endpoint container |
 | `target` | link endpoint object | yes | P | Target endpoint container |
@@ -362,7 +455,7 @@ Each link endpoint has this shape:
 
 Source and target may be on the same chromosome. Endpoint coordinates are
 explicit because the V1 compatibility behavior uses the source/target segment
-start only, not the whole interval. The producer must ensure that an endpoint ID
+start only, not the whole interval. The caller must ensure that an endpoint ID
 and point describe the same source record. V1 intentionally avoids requiring
 otherwise unplotted breakpoint segments in `segments` or duplicating their
 unused ends.
@@ -379,7 +472,9 @@ Counts are explicit, not encoded as magic IDs, sentinel values, widths, or
 missing fields. Given the V1 count definitions, domain validation enforces
 `patientCount <= sampleCount <= eventCount`. The renderer consumes
 already-aggregated values and does no cohort grouping, ranking, selection, or
-link limiting.
+link limiting. The caller retains the aggregate-to-contributing-findings map;
+contributor IDs and records are not embedded in the V1 input, SVG, or viewer
+event payload.
 
 ### 4.7 Representative payload shape
 
@@ -426,8 +521,8 @@ link limiting.
 ```
 
 The example is synthetic and demonstrates shape only. Its coordinates use the
-chosen zero-based contract; a future MPG adapter must establish its actual
-source convention rather than infer it from examples.
+chosen zero-based contract; every future caller or adapter must establish its
+actual source convention rather than infer it from examples.
 
 ## 5. Coordinate convention and assembly validation
 
@@ -456,16 +551,16 @@ and end boundaries. SVG's coordinate system and the human-readable angle
 convention will be isolated in `AngleMapper` so the clockwise/90-degree behavior
 is testable without sign ambiguity.
 
-The future MPG adapter must explicitly convert its source convention. If the
+Every caller or future integration adapter must explicitly convert its source convention. If the
 source is one-based closed `[start1, end1]`, it must emit
 `start0 = start1 - 1` and `end0 = end1`; a one-based point `position1` becomes
 `position0 = position1 - 1`. It must not adjust coordinates that are already
-zero-based half-open/zero-based points. The adapter must establish the MPG
-source convention explicitly, reject ambiguity, and apply assembly-specific
+zero-based half-open/zero-based points. The caller must establish its source
+convention explicitly, reject ambiguity, and apply assembly-specific
 bounds before serialization. The renderer will independently validate and will
 never guess or clamp input coordinates.
 
-## 6. Geometry and compatibility behavior
+## 6. Layout geometry and compatibility behavior
 
 `CircularLayoutEngine` will operate only after successful validation. It will
 compute immutable `PlotGeometry` in canonical chromosome order. Chromosome
@@ -513,7 +608,10 @@ anchor available to subsequent ribbons.
 Segment annular geometry is calculated from normalized interval boundary
 angles. Zero-area paths are impossible because empty intervals are rejected.
 Marker placement is a pure function, and null is never converted to numeric
-zero.
+zero. Individual cohort CNVs are never merged or converted to a density track.
+Overlapping segments share the same gain or loss track and render in stable
+input order with event fill opacity `0.88`; the viewer adds a strong outline to
+the single selected event without changing its path or z-order.
 
 For every link, let `eventCount` be 1 in patient mode and
 `aggregate.eventCount` in cohort mode, then:
@@ -524,6 +622,11 @@ halfWidthBp = 900000 + n * 250000
 fillAlpha = min(0.95, 0.55 + 0.04 * n)
 borderAlpha = min(0.98, fillAlpha + 0.08)
 ```
+
+`RibbonWidthCalculator` in `layout/` owns only `n` and `halfWidthBp`, which
+affect endpoint geometry. `CompatibilityTheme` in `renderer/` owns
+`fillAlpha`, `borderAlpha`, colors, and other presentation values. Layout types
+contain no CSS, SVG, color, opacity, stroke, or theme decisions.
 
 Each endpoint ribbon interval is
 `[max(0, position-halfWidthBp), min(chromosomeLength,
@@ -604,7 +707,6 @@ Each visible segment is one focusable group:
    data-segment-id="..."
    data-event-group-id="..."
    data-source-result-id="..."
-   data-clone-id="..."
    data-event-type="gain"
    data-confidence="HIGH"
    data-chromosome="7"
@@ -615,10 +717,9 @@ Each visible segment is one focusable group:
 
 Required attributes are `data-segment-id`, `data-source-result-id`,
 `data-event-type`, `data-chromosome`, `data-start`, and `data-end`.
-`data-event-group-id`, `data-confidence`, `data-copy-number`, and
-`data-clone-id` are omitted when their model values are null/absent; unknown is
-never serialized as an empty string, zero, or `null` text. Numeric formatting is
-locale-independent.
+`data-event-group-id`, `data-confidence`, and `data-copy-number` are omitted
+when their model values are null/absent; unknown is never serialized as an empty
+string, zero, or `null` text. Numeric formatting is locale-independent.
 
 ### 7.4 Interactive link elements
 
@@ -632,29 +733,34 @@ Each link is one focusable group containing its ribbon path:
    data-source-segment-id="..."
    data-target-segment-id="..."
    data-source-result-id="..."
-   data-clone-id="..."
    data-event-type="translocation"
    data-confidence="HIGH"
    data-source-chromosome="9" data-source-position="133729449"
    data-target-chromosome="22" data-target-position="23372909"
    data-aggregate-event-count="..."
    data-aggregate-patient-count="..."
-   data-aggregate-sample-count="...">...</g>
+   data-aggregate-sample-count="...">
+  <path class="circos-link-ribbon" .../>
+  <circle class="circos-link-endpoint endpoint-source" .../>
+  <circle class="circos-link-endpoint endpoint-target" .../>
+</g>
 ```
 
 `data-link-id`, source/target segment IDs, event type, both endpoint
-chromosomes, and both point positions are required. Event group, clone, and
-confidence are omitted when absent. `data-source-result-id` is required for a
+chromosomes, and both point positions are required. Event group and confidence
+are omitted when absent. `data-source-result-id` is required for a
 patient link and omitted for a cohort aggregate, whose contributing per-link
 result IDs are not present in the V1 contract; plot-level source scope remains
 in metadata. All three aggregate attributes are required in cohort mode and
 omitted in patient mode. The inner path uses class `circos-link-ribbon`;
 interaction attaches to the parent group so future visual layers do not change
-selection identity.
+selection identity. Endpoint markers exist at the exact source and target point
+coordinates but are visually quiet at rest; CSS reveals or emphasizes both when
+their parent link is hovered, keyboard-focused, or selected.
 
 Classes describe category, not raw IDs. Viewer state classes are reserved:
-`is-hovered`, `is-selected`, `is-related`, `is-dimmed`, `is-filtered`, and
-`is-hidden`. The Java renderer will not emit transient state classes.
+`is-hovered`, `is-selected`, `is-related`, and `is-dimmed`. The Java renderer
+will not emit transient state classes.
 
 ## 8. Viewer responsibilities and attachment model
 
@@ -664,33 +770,46 @@ cross-document event access differs for `<object>` and inline SVG, the initial
 viewer should normalize to an inline DOM without modifying geometry. It will
 verify `data-contract-version="1.0"` before attaching.
 
-The viewer will:
+The viewer presents no upload, setup, track-configuration, post-generation
+filter, reset, zoom, or export controls. The caller's fixed search snapshot
+fully determines plot membership. The viewer will:
 
 - delegate hover/focus and click handling from `.circos-scene` to
   `.circos-event`;
-- build escaped text-only tooltips from `data-*` values;
-- select by opaque ID and highlight all elements sharing
-  `data-event-group-id`;
-- dim unrelated events with state classes;
-- toggle gain, loss, and translocation classes;
-- filter on canonical chromosome endpoint attributes, confidence, event type,
-  and clone ID when clone data exists;
-- apply zoom/pan as a transform to `#circos-scene` or by changing the root
-  `viewBox`, and restore the original transform/viewBox on reset;
-- export the current SVG by cloning the root, preserving active presentation
-  state, removing viewer-only unsafe/runtime nodes, and serializing it; and
+- show an escaped text-only tooltip on hover or keyboard focus without changing
+  selection or emitting an application-state event;
+- format tooltip coordinates as one-based inclusive values and include the
+  normalized genome build; segment tooltips include event type, chromosome,
+  coordinates, copy number, and confidence when present, while cohort-link
+  tooltips also include event, patient, and sample counts;
+- maintain at most one selected event; clicking it again or clicking the plot
+  background clears selection;
+- emphasize the selected segment or ribbon and both selected-link endpoint
+  markers, highlight elements sharing `data-event-group-id`, and dim unrelated
+  events without changing paths or membership;
+- support keyboard traversal through focusable events, show the hover tooltip
+  on focus, select with Enter or Space, clear with Escape, and provide a visible
+  focus outline;
+- support mouse-wheel zoom and drag-to-pan without visible controls, plus a
+  programmatic reset API; the responsive container preserves the square aspect
+  ratio and the canonical `684 684` view box;
+- expose a programmatic export API that emits a clean, reset-view,
+  deterministic SVG by default and accepts an explicit option to retain current
+  selection highlighting; it removes tooltips and other viewer-only runtime
+  nodes before serialization; and
 - emit a `circos-selection-change` `CustomEvent` whose `detail` contains only
   opaque `plotId`, `plotSourceResultIds`, `segmentIds`, `linkIds`,
-  `eventGroupIds`, `selectedSourceResultIds`, and `cloneIds` for future MPG
-  callbacks. A cohort link may have no selected source result IDs; the plot
-  scope remains explicit and separate.
+  `eventGroupIds`, and `selectedSourceResultIds`. In cohort mode a selected
+  link ID is the caller-supplied stable aggregate ID. Contributor IDs and
+  records are never present; a host may resolve the aggregate through its own
+  external mapping.
 
-Filtering will change classes/ARIA state only. It will never regenerate a path,
-recalculate an angle, move an endpoint, or infer cohort aggregation. UI panels
-and controls remain outside the SVG so standalone SVG export is still valid.
-Confidence filtering is exact categorical matching (case preserved), not a
-numeric threshold. All DOM queries are rooted at the plot and support one or
-more plot instances.
+All DOM queries are rooted at the plot and support one or more plot instances.
+The viewer never queries a database, interprets search criteria, synchronizes a
+specific table or details widget, regenerates a path, recalculates an angle,
+moves an endpoint, changes event membership, or infers cohort aggregation.
+Clinical identity is neither drawn in the SVG nor included in viewer events;
+any patient/cohort context belongs to the host outside the plot.
 
 ## 9. Rendering pipeline
 
@@ -706,26 +825,30 @@ The public facade coordinates these stages in order:
 4. **Assembly lookup** — load the requested bundled assembly and its canonical
    chromosome order/lengths.
 5. **Domain validation** — normalize aliases, check bounds, IDs/references,
-   mode-specific aggregate rules, copy-number semantics, and clone references;
+   mode-specific aggregate rules and copy-number semantics;
    return all actionable errors in deterministic JSON-path order.
-6. **Layout calculation** — calculate sectors, gaps, tracks, annular paths,
+6. **Input-size enforcement** — reject when `segments.size + links.size`
+   exceeds the caller-selected or library-default positive safety ceiling. The
+   renderer reports the actual and allowed counts and never truncates.
+7. **Layout calculation** — calculate sectors, gaps, tracks, annular paths,
    endpoints, ribbons, labels, and legend geometry using pure Java geometry.
-7. **SVG scene generation** — combine immutable geometry with domain semantics
+8. **SVG scene generation** — combine immutable geometry with domain semantics
    and the compatibility theme into an internal SVG element tree.
-8. **Semantic serialization** — encode deterministic DOM IDs, XML-escape all
+9. **Semantic serialization** — encode deterministic DOM IDs, XML-escape all
    untrusted content, use locale-independent bounded numeric precision, and
    serialize UTF-8 SVG.
-9. **Viewer enhancement** — separately, JavaScript verifies the SVG contract
+10. **Viewer enhancement** — separately, JavaScript verifies the SVG contract
    and attaches interactions without changing geometry.
 
 Generation is fail-closed: no SVG is returned if any preceding stage fails.
 Validation errors are distinguished from unsupported version, assembly load,
 geometry invariant, and serialization failures.
 
-The CLI wraps stages 1-8 without altering them: it opens the selected input,
-passes it to `CircosApplication`, and returns the validated model,
-and maps typed failures to the exit codes defined in section 3. Viewer
-enhancement remains a separate browser step.
+The Phase 2 CLI wraps stages 1-9 without altering them: it opens the selected
+input, passes it to `CircosApplication`, writes SVG to the explicit output path
+or standard output, and maps typed failures to stable exit codes. It contains no
+selection, aggregation, database, or layout logic. Viewer enhancement remains a
+separate browser step.
 
 ## 10. Testing strategy
 
@@ -746,6 +869,8 @@ test lifecycle.
 - reject missing, malformed, and unsupported schema versions before mapping;
 - reject extra properties, wrong types, unresolved/duplicate IDs, and invalid
   patient/cohort aggregate placement;
+- require exactly one represented source result in patient mode and one or more
+  in cohort mode, including a cohort-search fixture with one represented result;
 - verify null copy number remains null and is valid only for allowed event
   types; reject omitted copy number, null gain values, non-integral values, and
   every gain value below the absolute-copy-number minimum of 3;
@@ -753,9 +878,13 @@ test lifecycle.
 - reject negative, empty, reversed, and assembly-out-of-range coordinates with
   stable structured errors;
 - accept exact assembly aliases and reject fuzzy/unsupported build strings;
-- reject inconsistent cohort counts and all patient/cohort sentinel conventions.
+- reject inconsistent cohort counts and all patient/cohort sentinel conventions;
+- reject inputs above the configured event ceiling with actual/allowed counts,
+  accept the exact boundary, and prove that no subset is rendered on failure;
+- reject the complete plot when any one event is invalid and return every
+  deterministic validation error rather than skipping or repairing records.
 
-### Assembly and geometry
+### Assembly and layout geometry
 
 - load GRCh37 and GRCh38 resource lengths and canonical order; reject unknown
   assemblies and malformed resource files;
@@ -792,8 +921,9 @@ test lifecycle.
 
 ### CLI harness
 
-- read a valid fixture path and produce a deterministic validation summary
-  through the public facade; SVG output is deferred;
+- retain the Phase 1 validation-only invocation and add an explicit Phase 2
+  output path/standard-output mode that writes deterministic SVG through the
+  public facade;
 - support standard input/output without closing caller-owned streams;
 - return stable exit codes and standard-error diagnostics for usage, schema,
   domain-validation, and generation failures;
@@ -802,11 +932,15 @@ test lifecycle.
 - keep CLI tests separate from rendering-core tests even though both share the
   single Maven module.
 
-Viewer tests, when implementation begins, will use browser DOM tests for hover,
-keyboard focus, selection, group highlighting, filters, clone-control absence,
-zoom/reset, export validity, multi-instance isolation, and callback event
-payloads. A guard test will assert that viewer source contains no independent
-chromosome-length table or circular path generator.
+Viewer tests, when implementation begins, will use browser DOM tests for
+stateless hover/focus tooltips, one-based coordinate formatting, single
+selection and clearing, group highlighting, unrelated-event dimming, endpoint
+emphasis, keyboard behavior, gesture zoom/pan, programmatic reset, clean and
+selection-preserving export, responsive square sizing, multi-instance
+isolation, and callback event payloads. Tests will assert the absence of upload,
+track-configuration, post-generation filter, and visible plot-control UI. A
+guard test will assert that viewer source contains no independent chromosome-
+length table, circular path generator, database client, or contributor map.
 
 ## 11. Initial synthetic examples
 
@@ -829,27 +963,42 @@ patient identifiers or source records are permitted.
 Phase 1 examples are JSON-only and must remain synthetic. Generated SVGs are
 deferred until the renderer phase.
 
-## 12. Approval decisions and implementation sequence
+## 12. Approved product decisions and implementation sequence
 
-Before implementation, approval should confirm:
+The design records these approved constraints:
 
-1. Java package/artifact naming (`org.mpg.circos`);
-2. zero-based half-open coordinates and explicit MPG adapter conversion;
-3. the JSON 1.0 fields, especially explicit nullable `copyNumber`/`confidence`,
-   the optional root `label`, absolute gain copy number `>= 3`, point-based link
-   endpoints with segment identities, and the conditional aggregate object;
-4. SHA-256-derived safe DOM IDs plus original IDs in escaped attributes;
-5. the semantic group and `data-*` contract;
-6. the documented safety changes relative to legacy output: strict input
-   bounds, derived ribbon-end clamping, explicit null handling, and the gain
-   rectangle floor at y=3.2;
-7. one Maven module with the CLI as an outer adapter in the production JAR; and
-8. deterministic structural SVG tests before golden SVG and deferred PNG
-   regression infrastructure.
+1. The artifact remains one Java 21 Maven module with package
+   `org.mpg.circos`, a stable Java rendering API, and a database-independent CLI
+   development harness.
+2. No integration mechanism is selected. JDBC, FileMaker, REST, MPG, and
+   specific GUI adapters remain outside the repository and outside Phase 2.
+3. Callers select eligible findings, genome build, stable identities, cohort
+   grouping/counts, aggregate IDs, contributor mappings, and search-level size
+   policy. The renderer validates but never infers or repairs those decisions.
+4. The JSON 1.0 contract uses zero-based half-open coordinates, optional root
+   `label`, absolute gain copy number `>= 3`, individual cohort CNV segments,
+   point-based links, explicit cohort counts, and no clone data.
+5. Rendering uses the specified multicolor chromosome ring, red gain and blue
+   loss interval arcs plus markers, mint connections, deterministic overlap
+   order, and responsive square scaling around a canonical `684 684` view box.
+6. The viewer exposes no upload/configuration interface, post-generation
+   filters, or visible controls. It provides stateless hover/focus tooltips,
+   single click/keyboard selection, related-event highlighting, unrelated-event
+   dimming, selected-link endpoint emphasis, gesture zoom/pan, and programmatic
+   reset/export.
+7. Tooltips display the normalized build and one-based inclusive coordinates.
+   SVG and viewer events contain no clinical identity or cohort contributor
+   records; cohort link IDs are caller-supplied aggregate IDs.
+8. Generation is fail-closed. One invalid event rejects the complete plot, and
+   a configurable safety ceiling rejects oversized input with no silent
+   truncation.
+9. Deterministic structural SVG tests precede golden SVG approval; PNG
+   regression infrastructure remains deferred.
 
-After approval, work should proceed in vertical, testable slices: Maven and
-model/schema plus the CLI argument contract; assembly resources and validation;
-geometry; deterministic structural SVG renderer tests; CLI end-to-end fixture
-generation; golden SVG parity; then viewer enhancement. PNG regression work may
-begin only after SVG parity is established. No database, REST, Docker, or MPG
-adapter work is part of that sequence.
+Phase 1 (model, schema, assemblies, parsing, validation, and validation-only
+CLI) is complete. After separate Phase 2 approval, work proceeds in gated,
+testable slices: public render options and size enforcement; layout geometry;
+semantic SVG renderer and structural tests; CLI SVG output and end-to-end
+fixtures; then canonical SVG review. Viewer implementation begins only after
+the Java-generated SVG contract and structural parity are approved. PNG
+regression work may begin only after SVG parity is established.
