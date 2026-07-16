@@ -1,0 +1,1 @@
+{"schemaVersion":"1.0","plotId":"bad","mode":"patient","assemblyId":"GRCh38","sourceResultIds":["r"],"segments":[{"id":"s","sourceResultId":"r","eventGroupId":null,"interval":{"chromosome":"M","start":0,"end":10},"eventType":"loss","copyNumber":null,"confidence":null}],"links":[]}

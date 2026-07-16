@@ -1,0 +1,2 @@
+{"schemaVersion":"1.0","plotId":"synthetic-aliases","mode":"patient","assemblyId":"hg19","sourceResultIds":["result-a"],"segments":[{"id":"gain-alias","sourceResultId":"result-a","eventGroupId":null,"interval":{"chromosome":"CHR01","start":0,"end":100},"eventType":"gain","copyNumber":3,"confidence":null}],"links":[]}
+

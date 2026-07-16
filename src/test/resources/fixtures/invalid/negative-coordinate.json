@@ -1,0 +1,1 @@
+{"schemaVersion":"1.0","plotId":"invalid-coordinate","mode":"patient","assemblyId":"GRCh38","coordinateConvention":"ZERO_BASED_HALF_OPEN","sourceResultIds":["r"],"segments":[{"id":"s","sourceResultId":"r","eventGroupId":null,"interval":{"chromosome":"1","start":-1,"end":10},"eventType":"loss","copyNumber":null,"confidence":null}],"links":[]}
