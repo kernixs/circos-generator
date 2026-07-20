@@ -18,7 +18,8 @@
 <main>
   <header>
     <h1>Interactive Circos examples</h1>
-    <p>Hover an event for details. Click it or press Enter/Space to select it.</p>
+    <p>Hover an event for details. Click it or press Enter/Space to select it. These examples show
+      representative combinations; patient and cohort plots may contain both segments and links.</p>
   </header>
   <article>
     <h2>Patient gains and losses</h2>
@@ -35,12 +36,17 @@
     <div data-circos-svg="../examples/generated/cohort-aggregate.svg"></div>
     <p class="selection" aria-live="polite">No event selected</p>
   </article>
+  <article>
+    <h2>Cohort gains, losses, and connection</h2>
+    <div data-circos-svg="../examples/generated/cohort-segments.svg"></div>
+    <p class="selection" aria-live="polite">No event selected</p>
+  </article>
 </main>
 <script src="circos-viewer.js"></script>
 <script>
   document.addEventListener("circos-selection-change", function (event) {
     var output = event.target.parentElement.querySelector(".selection");
-    var ids = event.detail.segmentIds.concat(event.detail.linkIds);
+    var ids = event.detail.aggregateIds.concat(event.detail.segmentIds, event.detail.linkIds);
     output.textContent = ids.length ? "Selected opaque ID: " + ids[0] : "No event selected";
   });
 </script>

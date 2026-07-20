@@ -2,6 +2,8 @@ package org.mpg.circos.validation;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -13,6 +15,20 @@ class PlotInputReaderTest {
         try (var input = getClass().getResourceAsStream("/examples/gains-and-losses.json")) {
             var plot = reader.read(input);
             assertEquals(null, plot.segments().get(1).copyNumber());
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    void parsesTypedTooltipMetadata() {
+        try (var input = getClass().getResourceAsStream("/examples/cohort-aggregate.json")) {
+            var link = reader.read(input).links().get(0);
+            assertEquals(List.of("ABL1"), link.annotations().sourceGenes());
+            assertEquals(List.of("BCR"), link.annotations().targetGenes());
+            assertEquals("Exact breakpoints", link.aggregate().groupingDescription());
+            assertEquals("High", link.aggregate().confidenceDistribution().get(0).label());
+            assertEquals(4, link.aggregate().confidenceDistribution().get(0).count());
         } catch (Exception e) {
             throw new AssertionError(e);
         }

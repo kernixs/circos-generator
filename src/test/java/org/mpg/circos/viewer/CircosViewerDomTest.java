@@ -20,22 +20,90 @@ class CircosViewerDomTest {
         try (WebClient browser = browser()) {
             HtmlPage segments = page(browser, "/examples/gains-and-losses.json");
             hover(segments, ".event-gain");
-            assertTrue(script(segments, "document.querySelector('.circos-tooltip').textContent")
-                    .contains("Gain · chr18:37,912,423–39,587,423"));
-            assertFalse(script(segments, "document.querySelector('.circos-tooltip').textContent")
-                    .contains("GRCh"));
+            assertTrue(tooltip(segments).contains("Amplification\nchr18:37,912,423–39,587,423"));
+            assertTrue(tooltip(segments).contains("Genome build: GRCh37"));
             assertEquals("false", script(segments,
                     "String(document.querySelector('.circos-tooltip').hidden)"));
             assertEquals("0", script(segments, "String(window.selectionDetails.length)"));
             hover(segments, ".event-loss");
-            assertTrue(script(segments, "document.querySelector('.circos-tooltip').textContent")
-                    .contains("Loss · chr7:16,014,079–18,239,079"));
+            assertTrue(tooltip(segments).contains("Deletion\nchr7:16,014,079–18,239,079"));
 
             HtmlPage links = page(browser, "/examples/crossing-links.json");
             hover(links, ".circos-link");
-            assertTrue(script(links, "document.querySelector('.circos-tooltip').textContent")
-                    .contains("Translocation · chr1:1,000,001 ↔ chr22:5,000,001"));
+            assertTrue(tooltip(links).contains("Translocation\nchr1:1,000,001 ↔ chr22:5,000,001"));
             assertEquals("0", script(links, "String(window.selectionDetails.length)"));
+        }
+    }
+
+    @Test
+    void patientSegmentTooltipsFormatMetadataLengthsAndMissingValues() throws Exception {
+        try (WebClient browser = browser()) {
+            HtmlPage page = page(browser, "/examples/tooltip-metadata.json");
+
+            hover(page, "[data-segment-id='bp-gain']");
+            String gain = tooltip(page);
+            assertTrue(gain.contains("Duplication\nchr1:101–1,099\n999 bp"));
+            assertTrue(gain.contains("Copy number: 3"));
+            assertTrue(gain.contains("Genes: EGFR <safe> & MET"));
+            assertTrue(gain.contains("Method: FISH"));
+            assertFalse(gain.contains("Confidence:"));
+            assertEquals("0", script(page, "String(document.querySelectorAll('.circos-tooltip script').length)"));
+
+            hover(page, "[data-segment-id='kb-loss']");
+            String loss = tooltip(page);
+            assertTrue(loss.contains("Loss\nchr2:2,001–14,500\n12.5 kb"));
+            assertFalse(loss.contains("Copy number:"));
+            assertFalse(loss.contains("Genes:"));
+            assertFalse(loss.contains("Method:"));
+            assertFalse(loss.contains("Confidence:"));
+
+            hover(page, "[data-segment-id='mb-loss']");
+            String longGenes = tooltip(page);
+            assertTrue(longGenes.contains("5.36 Mb"));
+            assertTrue(longGenes.contains("Genes: 11 genes"));
+            assertTrue(longGenes.contains("Methods: Microarray, WGS"));
+            assertTrue(longGenes.contains("Confidence: High"));
+        }
+    }
+
+    @Test
+    void patientLinkTooltipCanonicalizesReversedEndpointsAndGenes() throws Exception {
+        try (WebClient browser = browser()) {
+            HtmlPage page = page(browser, "/examples/tooltip-metadata.json");
+            hover(page, "[data-link-id='reversed-link']");
+
+            String tooltip = tooltip(page);
+            assertTrue(tooltip.contains("chr9:133,600,000 ↔ chr22:23,600,000"));
+            assertTrue(tooltip.contains("Genes: ABL1 ↔ BCR"));
+            assertTrue(tooltip.contains("Method: Karyotype"));
+            assertTrue(tooltip.contains("Confidence: High"));
+        }
+    }
+
+    @Test
+    void cohortSegmentAndLinkTooltipsUseSuppliedCountsWithoutAveraging() throws Exception {
+        try (WebClient browser = browser()) {
+            HtmlPage segments = page(browser, "/examples/cohort-single-result.json");
+            hover(segments, "[data-segment-id='cohort-gain-1']");
+            String gain = tooltip(segments);
+            assertTrue(gain.contains("1 event · 1 patient · 1 sample"));
+            assertTrue(gain.contains("Methods: Microarray, WGS"));
+            assertTrue(gain.contains("Grouped by: Exact interval"));
+            assertTrue(gain.contains("Confidence: High 1"));
+
+            hover(segments, "[data-segment-id='cohort-loss-1']");
+            String loss = tooltip(segments);
+            assertTrue(loss.contains("2 events · 2 patients · 2 samples"));
+            assertTrue(loss.contains("Method: WGS"));
+            assertTrue(loss.contains("Confidence: High 1, Low 1"));
+
+            HtmlPage links = page(browser, "/examples/cohort-aggregate.json");
+            hover(links, "[data-link-id='aggregate-9-22']");
+            String link = tooltip(links);
+            assertTrue(link.contains("chr9:66,858,501 ↔ chr22:11,609,501"));
+            assertTrue(link.contains("6 events · 3 patients · 4 samples"));
+            assertTrue(link.contains("Grouped by: Exact breakpoints"));
+            assertFalse(link.toLowerCase().contains("average"));
         }
     }
 
@@ -97,9 +165,15 @@ class CircosViewerDomTest {
             click(page, ".circos-link");
 
             assertEquals("aggregate-9-22", script(page, "window.selectionDetails[0].linkIds[0]"));
+            assertEquals("aggregate-9-22", script(page, "window.selectionDetails[0].aggregateIds[0]"));
             assertEquals("0", script(page,
                     "String(window.selectionDetails[0].selectedSourceResultIds.length)"));
             assertFalse(script(page, "JSON.stringify(window.selectionDetails[0])").contains("contributor"));
+
+            HtmlPage segments = page(browser, "/examples/cohort-single-result.json");
+            click(segments, "[data-segment-id='cohort-gain-1']");
+            assertEquals("cohort-gain-1", script(segments, "window.selectionDetails[0].segmentIds[0]"));
+            assertEquals("cohort-gain-1", script(segments, "window.selectionDetails[0].aggregateIds[0]"));
         }
     }
 
@@ -138,17 +212,24 @@ class CircosViewerDomTest {
     }
 
     private void hover(HtmlPage page, String selector) {
-        script(page, "document.querySelector('" + selector + "').dispatchEvent(new MouseEvent('mouseover',"
+        script(page, "document.querySelector(" + javascriptString(selector)
+                + ").dispatchEvent(new MouseEvent('mouseover',"
                 + "{bubbles:true,clientX:20,clientY:30}))");
     }
 
+    private String tooltip(HtmlPage page) {
+        return script(page, "document.querySelector('.circos-tooltip').textContent");
+    }
+
     private void click(HtmlPage page, String selector) {
-        script(page, "document.querySelector('" + selector + "').dispatchEvent(new MouseEvent('click',"
+        script(page, "document.querySelector(" + javascriptString(selector)
+                + ").dispatchEvent(new MouseEvent('click',"
                 + "{bubbles:true}))");
     }
 
     private void key(HtmlPage page, String selector, String key) {
-        script(page, "document.querySelector('" + selector + "').dispatchEvent(new KeyboardEvent('keydown',"
+        script(page, "document.querySelector(" + javascriptString(selector)
+                + ").dispatchEvent(new KeyboardEvent('keydown',"
                 + "{bubbles:true,key:" + javascriptString(key) + "}))");
     }
 

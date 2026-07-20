@@ -26,6 +26,12 @@ class SemanticSvgRendererTest {
         assertEquals(1, elementsWithClass(document, "circos-segment"));
         assertEquals(1, elementsWithClass(document, "circos-link-ribbon"));
         assertEquals(2, elementsWithClass(document, "circos-link-endpoint"));
+        var segment = firstWithClass(document, "circos-segment");
+        assertEquals("duplication", segment.getAttribute("data-display-type"));
+        assertEquals("[\"BCL2\"]", segment.getAttribute("data-genes"));
+        var link = firstWithClass(document, "circos-link");
+        assertEquals("[\"ABL1\"]", link.getAttribute("data-source-genes"));
+        assertEquals("[\"BCR\"]", link.getAttribute("data-target-genes"));
         assertFalse(document.getDocumentElement().hasAttribute("onclick"));
     }
 
@@ -40,6 +46,10 @@ class SemanticSvgRendererTest {
             assertEquals("6", element.getAttribute("data-aggregate-event-count"));
             assertEquals("3", element.getAttribute("data-aggregate-patient-count"));
             assertEquals("4", element.getAttribute("data-aggregate-sample-count"));
+            assertEquals("aggregate-9-22", element.getAttribute("data-aggregate-id"));
+            assertEquals("Exact breakpoints", element.getAttribute("data-grouping-description"));
+            assertEquals("[{\"label\":\"High\",\"count\":4},{\"label\":\"Medium\",\"count\":2}]",
+                    element.getAttribute("data-confidence-distribution"));
             assertFalse(element.hasAttribute("data-source-result-id"));
         }
     }
@@ -69,6 +79,15 @@ class SemanticSvgRendererTest {
             if (java.util.List.of(element.getAttribute("class").split(" ")).contains(className)) count++;
         }
         return count;
+    }
+
+    private org.w3c.dom.Element firstWithClass(Document document, String className) {
+        var all = document.getElementsByTagName("*");
+        for (int i = 0; i < all.getLength(); i++) {
+            var element = (org.w3c.dom.Element) all.item(i);
+            if (java.util.List.of(element.getAttribute("class").split(" ")).contains(className)) return element;
+        }
+        throw new AssertionError("Missing element with class " + className);
     }
 
     private Document parse(String xml) throws Exception {

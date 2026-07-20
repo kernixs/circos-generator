@@ -147,8 +147,10 @@ must:
   before constructing the input;
 - keep names, medical-record numbers, and other clinical identity out of IDs,
   labels, metadata, and all other renderer input fields;
-- preserve individual cohort CNV segments rather than merging them into a
-  density track;
+- preserve cohort CNV interval geometry rather than converting it into a
+  density track. A trusted caller aggregate ID may combine exact compatible
+  intervals; otherwise only exact normalized intervals with matching event
+  semantics may be grouped, never merely overlapping intervals;
 - group cohort connections by a caller-supplied cohort aggregate ID. A database
   `event_group_id` is not a cohort identity unless the caller explicitly
   guarantees that meaning. When no cohort aggregate ID exists, use exact
@@ -217,6 +219,10 @@ src/main/java/org/mpg/circos/
     GenomicLink.java
     LinkEndpoint.java
     CohortAggregate.java
+    ConfidenceCount.java
+    SegmentDisplayType.java
+    SegmentAnnotationMetadata.java
+    LinkAnnotationMetadata.java
     EventType.java
     CoordinateConvention.java
     GenomicInterval.java
@@ -406,8 +412,11 @@ versioned contract revision and separate approval.
 | `eventGroupId` | opaque string or null | yes | I | Groups related visual events when supplied |
 | `interval` | genomic interval | yes | P | Canonicalized during validation |
 | `eventType` | `gain` or `loss` | yes | P | Track/category behavior; caller normalizes source aliases |
+| `displayType` | segment display type | no | I | `gain`, `duplication`, `amplification`, `loss`, or `deletion`; must match the geometry category |
 | `copyNumber` | integer or null | yes | P | Explicit unknown is `null`; never coerced to zero |
 | `confidence` | string or null | yes | I | Source category such as `HIGH`; explicit unknown is `null` |
+| `annotations` | segment annotation object | no | I | Neutral ordered gene and method strings for concise display |
+| `aggregate` | cohort aggregate object | no | A | Optional caller-defined aggregate metadata for cohort segments; forbidden in patient mode |
 | `label` | string | no | I | Tooltip/display metadata |
 
 V1 defines copy number as absolute integer copy number. For `gain`,
@@ -420,6 +429,11 @@ new documented contract convention rather than weakening this rule. Confidence
 is a bounded, display-safe
 opaque category rather than an invented numeric score; V1 preserves values such
 as `HIGH` and `MEDIUM` without assigning them an ordering.
+
+`displayType` does not alter layout: duplication and amplification use gain
+geometry, while deletion uses loss geometry. Segment annotations contain only
+ordered `genes[]` and `methods[]`; they contain no patient, accession,
+diagnosis, classification, or database identity.
 
 ### 4.4 Genomic interval
 
@@ -447,6 +461,7 @@ does not have to appear here because the current pipeline does not plot its
 | `confidence` | string or null | yes | I | Explicit unknown is `null`; never overloaded with `COHORT` |
 | `aggregate` | cohort aggregate object | conditional | A | Required in cohort mode; forbidden in patient mode |
 | `label` | string | no | I | Tooltip/display metadata |
+| `annotations` | link annotation object | no | I | Neutral ordered source genes, target genes, and methods |
 
 Each link endpoint has this shape:
 
@@ -470,6 +485,8 @@ unused ends.
 | `eventCount` | integer >= 1 | yes | A | Number of aggregated events |
 | `patientCount` | integer >= 1 | yes | A | Number of distinct patients represented |
 | `sampleCount` | integer >= 1 | yes | A | Number of distinct samples represented |
+| `groupingDescription` | string | no | A | Neutral caller description such as `Exact interval` or `Exact breakpoints` |
+| `confidenceDistribution` | confidence-count array | no | A | Explicit category counts; never averaged by the renderer or viewer |
 
 Counts are explicit, not encoded as magic IDs, sentinel values, widths, or
 missing fields. Given the V1 count definitions, domain validation enforces
@@ -478,6 +495,13 @@ already-aggregated values and does no cohort grouping, ranking, selection, or
 link limiting. The caller retains the aggregate-to-contributing-findings map;
 contributor IDs and records are not embedded in the V1 input, SVG, or viewer
 event payload.
+
+For cohort segments, the caller supplies a stable aggregate ID as the segment
+`id` when trusted aggregate identity exists. Without one, the caller may group
+only exact normalized intervals with matching event semantics; merely
+overlapping intervals are not merged. Link endpoints are canonicalized for
+display comparison, never grouped solely by chromosome pair, and never
+averaged.
 
 ### 4.7 Representative payload shape
 
@@ -711,16 +735,20 @@ Each visible segment is one focusable group:
    data-event-group-id="..."
    data-source-result-id="..."
    data-event-type="gain"
+   data-display-type="duplication"
    data-confidence="HIGH"
    data-chromosome="7"
    data-start="100"
    data-end="200"
-   data-copy-number="3">...</g>
+   data-copy-number="3"
+   data-genes='["EGFR","MET"]'
+   data-methods='["Microarray"]'>...</g>
 ```
 
 Required attributes are `data-segment-id`, `data-source-result-id`,
 `data-event-type`, `data-chromosome`, `data-start`, and `data-end`.
-`data-event-group-id`, `data-confidence`, and `data-copy-number` are omitted
+`data-event-group-id`, `data-confidence`, `data-copy-number`, annotations, and
+aggregate attributes are omitted
 when their model values are null/absent; unknown is never serialized as an empty
 string, zero, or `null` text. Numeric formatting is locale-independent.
 
@@ -754,8 +782,8 @@ chromosomes, and both point positions are required. Event group and confidence
 are omitted when absent. `data-source-result-id` is required for a
 patient link and omitted for a cohort aggregate, whose contributing per-link
 result IDs are not present in the V1 contract; plot-level source scope remains
-in metadata. All three aggregate attributes are required in cohort mode and
-omitted in patient mode. The inner path uses class `circos-link-ribbon`;
+in metadata. All three count attributes are required for cohort links and any
+aggregated cohort segment, and omitted for patient events. The inner path uses class `circos-link-ribbon`;
 interaction attaches to the parent group so future visual layers do not change
 selection identity. Endpoint markers exist at the exact source and target point
 coordinates but are visually quiet at rest; CSS reveals or emphasizes both when
@@ -782,9 +810,11 @@ fully determines plot membership. The viewer will:
 - show an escaped text-only tooltip on hover or keyboard focus without changing
   selection or emitting an application-state event;
 - format tooltip coordinates as one-based inclusive values; segment tooltips
-  include event type, chromosome,
-  coordinates, copy number, and confidence when present, while cohort-link
-  tooltips also include event, patient, and sample counts;
+  include display type, chromosome, coordinates, computed bp/kb/Mb length,
+  build, and supplied copy number, genes, methods, and meaningful confidence;
+  link tooltips use canonical endpoint order and supplied endpoint genes;
+  cohort tooltips add event, patient, and sample counts, grouping description,
+  and only an explicitly supplied confidence distribution;
 - maintain at most one selected event; clicking it again or clicking the plot
   background clears selection;
 - emphasize the selected segment or ribbon and both selected-link endpoint
@@ -795,8 +825,9 @@ fully determines plot membership. The viewer will:
   focus outline;
 - emit a `circos-selection-change` `CustomEvent` whose `detail` contains only
   opaque `plotId`, `plotSourceResultIds`, `segmentIds`, `linkIds`,
-  `eventGroupIds`, and `selectedSourceResultIds`. In cohort mode a selected
-  link ID is the caller-supplied stable aggregate ID. Contributor IDs and
+  `eventGroupIds`, `aggregateIds`, and `selectedSourceResultIds`. In cohort mode
+  a selected aggregate segment or link reports its caller-supplied stable ID in
+  `aggregateIds` as well as its type-specific ID array. Contributor IDs and
   records are never present; a host may resolve the aggregate through its own
   external mapping.
 
@@ -933,9 +964,8 @@ test lifecycle.
 
 Viewer tests, when implementation begins, will use browser DOM tests for
 stateless hover/focus tooltips, one-based coordinate formatting, single
-selection and clearing, group highlighting, unrelated-event dimming, endpoint
-emphasis, keyboard behavior, gesture zoom/pan, programmatic reset, clean and
-selection-preserving export, responsive square sizing, multi-instance
+  selection and clearing, group highlighting, unrelated-event dimming, endpoint
+  emphasis, keyboard behavior, responsive square sizing, multi-instance
 isolation, and callback event payloads. Tests will assert the absence of upload,
 track-configuration, post-generation filter, and visible plot-control UI. A
 guard test will assert that viewer source contains no independent chromosome-
@@ -962,8 +992,12 @@ patient identifiers or source records are permitted.
   marker boundaries, plus a loss with explicit null copy number.
 - `crossing-links.json`: several links across different chromosome quadrants to
   exercise endpoint placement, z-order, curvature, and overlap.
-- `cohort-aggregate.json`: cohort mode with explicit event, patient, and sample
-  counts and no raw-link sentinel convention.
+- `cohort-aggregate.json`: cohort mode with explicit counts, methods, endpoint
+  genes, grouping description, and confidence distribution.
+- `cohort-single-result.json`: valid single-result cohort with aggregate gain,
+  loss, and link tooltip metadata.
+- `tooltip-metadata.json`: patient tooltip formatting, missing optional values,
+  safe annotation text, long genes, length units, and reversed endpoints.
 - `empty-categories.json`: valid empty segments/links plus variants containing
   gains only, losses only, and links only to verify conditional tracks and the
   unconditional legend.
@@ -981,19 +1015,19 @@ The design records these approved constraints:
 2. No integration mechanism is selected. JDBC, FileMaker, REST, MPG, and
    specific GUI adapters remain outside the repository and outside Phase 2.
 3. Callers select eligible findings, genome build, stable identities, cohort
-   grouping/counts, aggregate IDs, contributor mappings, and search-level size
+   grouping/counts, aggregate IDs, neutral tooltip annotations, contributor
+   mappings, and search-level size
    policy. The renderer validates but never infers or repairs those decisions.
 4. The JSON 1.0 contract uses zero-based half-open coordinates, optional root
-   `label`, absolute gain copy number `>= 3`, individual cohort CNV segments,
-   point-based links, explicit cohort counts, and no clone data.
+   `label`, absolute gain copy number `>= 3`, optionally aggregated cohort CNV
+   segments, point-based links, explicit cohort counts, and no clone data.
 5. Rendering uses the specified multicolor chromosome ring, red gain and blue
    loss interval arcs plus markers, mint connections, deterministic overlap
    order, and responsive square scaling around a canonical `684 684` view box.
 6. The viewer exposes no upload/configuration interface, post-generation
    filters, or visible controls. It provides stateless hover/focus tooltips,
    single click/keyboard selection, related-event highlighting, unrelated-event
-   dimming, selected-link endpoint emphasis, gesture zoom/pan, and programmatic
-   reset/export.
+   dimming, and selected-link endpoint emphasis.
 7. Tooltips display the normalized build and one-based inclusive coordinates.
    SVG and viewer events contain no clinical identity or cohort contributor
    records; cohort link IDs are caller-supplied aggregate IDs.

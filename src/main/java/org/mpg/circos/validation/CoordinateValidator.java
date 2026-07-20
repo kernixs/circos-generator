@@ -34,12 +34,12 @@ final class CoordinateValidator {
                 .map(s -> new GenomicSegment(s.id(), s.sourceResultId(), s.eventGroupId(),
                         new GenomicInterval(normalize(s.interval().chromosome(), assembly),
                                 s.interval().start(), s.interval().end()), s.eventType(),
-                        s.copyNumber(), s.confidence(), s.label()))
+                        s.copyNumber(), s.confidence(), s.label(), s.displayType(), s.annotations(), s.aggregate()))
                 .toList();
         List<GenomicLink> links = plot.links().stream()
                 .map(l -> new GenomicLink(l.id(), l.eventGroupId(), normalize(l.source(), assembly),
                         normalize(l.target(), assembly), l.sourceResultId(), l.eventType(),
-                        l.confidence(), l.aggregate(), l.label()))
+                        l.confidence(), l.aggregate(), l.label(), l.annotations()))
                 .toList();
         return new CircosPlot(plot.schemaVersion(), plot.plotId(), plot.label(), plot.mode(),
                 assembly.id().canonical(), plot.coordinateConvention(), plot.sourceResultIds(), segments, links);

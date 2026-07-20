@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0",
+  "plotId": "tooltip-metadata",
+  "mode": "patient",
+  "assemblyId": "GRCh38",
+  "coordinateConvention": "ZERO_BASED_HALF_OPEN",
+  "sourceResultIds": ["result-tooltip"],
+  "segments": [
+    {
+      "id": "bp-gain",
+      "sourceResultId": "result-tooltip",
+      "eventGroupId": null,
+      "interval": {"chromosome": "1", "start": 100, "end": 1099},
+      "eventType": "gain",
+      "displayType": "duplication",
+      "copyNumber": 3,
+      "confidence": "unknown",
+      "annotations": {"genes": ["EGFR <safe> & MET"], "methods": ["FISH"]}
+    },
+    {
+      "id": "kb-loss",
+      "sourceResultId": "result-tooltip",
+      "eventGroupId": null,
+      "interval": {"chromosome": "2", "start": 2000, "end": 14500},
+      "eventType": "loss",
+      "displayType": "loss",
+      "copyNumber": null,
+      "confidence": null
+    },
+    {
+      "id": "mb-loss",
+      "sourceResultId": "result-tooltip",
+      "eventGroupId": null,
+      "interval": {"chromosome": "3", "start": 100000, "end": 5460000},
+      "eventType": "loss",
+      "displayType": "deletion",
+      "copyNumber": null,
+      "confidence": "High",
+      "annotations": {
+        "genes": ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11"],
+        "methods": ["Microarray", "WGS"]
+      }
+    }
+  ],
+  "links": [
+    {
+      "id": "reversed-link",
+      "eventGroupId": "patient-event",
+      "source": {"segmentId": "breakpoint-22", "chromosome": "22", "position": 23599999},
+      "target": {"segmentId": "breakpoint-9", "chromosome": "9", "position": 133599999},
+      "sourceResultId": "result-tooltip",
+      "eventType": "translocation",
+      "confidence": "High",
+      "annotations": {
+        "sourceGenes": ["BCR"],
+        "targetGenes": ["ABL1"],
+        "methods": ["Karyotype"]
+      }
+    }
+  ]
+}

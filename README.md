@@ -28,7 +28,7 @@ Use `--output -` to write SVG to standard output. The CLI only reads the
 versioned plot contract; it performs no database queries, cohort aggregation,
 contributor resolution, or GUI/viewer behavior.
 
-Run the three inline viewer examples with:
+Run the inline viewer examples with:
 
 ```text
 python3 -m http.server 8000

@@ -59,6 +59,8 @@
     background: rgba(20, 24, 31, 0.94);
     color: #fff;
     font: 12px/1.35 Arial, sans-serif;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
