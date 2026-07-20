@@ -230,9 +230,9 @@
       <text class="chromosome-label" data-chromosome="Y" x="296.622" y="22.203">Y</text>
     </g>
     <g id="circos-legend-417f117817f323109410f6fa" class="circos-legend">
-      <rect x="70" y="494" width="12" height="12" fill="#d7191c" fill-opacity="0.88"/><text class="legend-label" x="88" y="500">Gain / Duplication / Amplification</text>
-      <rect x="70" y="512" width="12" height="12" fill="#2c7bb6" fill-opacity="0.88"/><text class="legend-label" x="88" y="518">Loss / Deletion</text>
-      <rect x="70" y="530" width="12" height="12" fill="#71dfc0" fill-opacity="0.88"/><text class="legend-label" x="88" y="536">Translocation</text>
+      <rect x="16" y="634" width="12" height="12" fill="#d7191c" fill-opacity="0.88"/><text class="legend-label" x="34" y="640">Gain / Duplication / Amplification</text>
+      <rect x="16" y="652" width="12" height="12" fill="#2c7bb6" fill-opacity="0.88"/><text class="legend-label" x="34" y="658">Loss / Deletion</text>
+      <rect x="16" y="670" width="12" height="12" fill="#71dfc0" fill-opacity="0.88"/><text class="legend-label" x="34" y="676">Translocation</text>
     </g>
   </g>
 </svg>

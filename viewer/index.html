@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Circos Viewer Examples</title>
+  <link rel="stylesheet" href="circos-viewer.css">
+  <style>
+    body { margin: 0; padding: 24px; color: #182230; background: #f6f7f9; font-family: Arial, sans-serif; }
+    main { display: grid; gap: 32px; justify-items: center; }
+    article { width: min(100%, 800px); padding: 18px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; }
+    h1 { margin: 0 0 8px; text-align: center; }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    .selection { min-height: 1.4em; margin: 10px 0 0; color: #475467; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Interactive Circos examples</h1>
+    <p>Hover an event for details. Click it or press Enter/Space to select it.</p>
+  </header>
+  <article>
+    <h2>Patient gains and losses</h2>
+    <div data-circos-svg="../examples/generated/patient-gains-losses.svg"></div>
+    <p class="selection" aria-live="polite">No event selected</p>
+  </article>
+  <article>
+    <h2>Crossing connections</h2>
+    <div data-circos-svg="../examples/generated/crossing-links.svg"></div>
+    <p class="selection" aria-live="polite">No event selected</p>
+  </article>
+  <article>
+    <h2>Cohort aggregate</h2>
+    <div data-circos-svg="../examples/generated/cohort-aggregate.svg"></div>
+    <p class="selection" aria-live="polite">No event selected</p>
+  </article>
+</main>
+<script src="circos-viewer.js"></script>
+<script>
+  document.addEventListener("circos-selection-change", function (event) {
+    var output = event.target.parentElement.querySelector(".selection");
+    var ids = event.detail.segmentIds.concat(event.detail.linkIds);
+    output.textContent = ids.length ? "Selected opaque ID: " + ids[0] : "No event selected";
+  });
+</script>
+</body>
+</html>

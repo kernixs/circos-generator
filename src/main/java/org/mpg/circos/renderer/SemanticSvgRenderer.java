@@ -236,9 +236,9 @@ public final class SemanticSvgRenderer {
 
     private void appendLegend(StringBuilder svg, String plotToken) {
         svg.append("    <g id=\"circos-legend-").append(plotToken).append("\" class=\"circos-legend\">\n");
-        legendItem(svg, 70, 500, theme.gainColor(), "Gain / Duplication / Amplification");
-        legendItem(svg, 70, 518, theme.lossColor(), "Loss / Deletion");
-        legendItem(svg, 70, 536, theme.linkColor(), "Translocation");
+        legendItem(svg, 16, 640, theme.gainColor(), "Gain / Duplication / Amplification");
+        legendItem(svg, 16, 658, theme.lossColor(), "Loss / Deletion");
+        legendItem(svg, 16, 676, theme.linkColor(), "Translocation");
         svg.append("    </g>\n");
     }
 

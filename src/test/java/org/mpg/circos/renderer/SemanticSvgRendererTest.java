@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SemanticSvgRendererTest {
     @Test
@@ -41,6 +42,23 @@ class SemanticSvgRendererTest {
             assertEquals("4", element.getAttribute("data-aggregate-sample-count"));
             assertFalse(element.hasAttribute("data-source-result-id"));
         }
+    }
+
+    @Test
+    void positionsLegendInLowerLeftCornerOutsidePlotRings() throws Exception {
+        Document document = parse(new CircosApplication()
+                .render(TestFixtures.open("/examples/gains-and-losses.json")).xml());
+        var groups = document.getElementsByTagName("g");
+        for (int i = 0; i < groups.getLength(); i++) {
+            var group = (org.w3c.dom.Element) groups.item(i);
+            if (!java.util.List.of(group.getAttribute("class").split(" ")).contains("circos-legend")) continue;
+            var swatches = group.getElementsByTagName("rect");
+            assertEquals(3, swatches.getLength());
+            assertEquals("16", ((org.w3c.dom.Element) swatches.item(0)).getAttribute("x"));
+            assertTrue(Integer.parseInt(((org.w3c.dom.Element) swatches.item(0)).getAttribute("y")) >= 630);
+            return;
+        }
+        throw new AssertionError("Missing Circos legend");
     }
 
     private int elementsWithClass(Document document, String className) {
