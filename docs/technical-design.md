@@ -745,8 +745,11 @@ Each visible segment is one focusable group:
    data-methods='["Microarray"]'>...</g>
 ```
 
-Required attributes are `data-segment-id`, `data-source-result-id`,
-`data-event-type`, `data-chromosome`, `data-start`, and `data-end`.
+Required attributes are `data-segment-id`, `data-event-type`,
+`data-chromosome`, `data-start`, and `data-end`. `data-source-result-id` is
+required for patient and individual cohort segments, but omitted for an
+aggregate segment so a representative result cannot be mistaken for a
+contributor.
 `data-event-group-id`, `data-confidence`, `data-copy-number`, annotations, and
 aggregate attributes are omitted
 when their model values are null/absent; unknown is never serialized as an empty

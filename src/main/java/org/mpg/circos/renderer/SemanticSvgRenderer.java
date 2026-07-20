@@ -154,7 +154,8 @@ public final class SemanticSvgRenderer {
                     .append("\" tabindex=\"0\" role=\"button\"")
                     .append(attr("data-segment-id", segment.id()))
                     .append(optionalAttr("data-event-group-id", segment.eventGroupId()))
-                    .append(attr("data-source-result-id", segment.sourceResultId()))
+                    .append(segment.aggregate() == null
+                            ? attr("data-source-result-id", segment.sourceResultId()) : "")
                     .append(attr("data-event-type", type.value()))
                     .append(attr("data-display-type", segment.displayType() == null
                             ? type.value() : segment.displayType().value()))

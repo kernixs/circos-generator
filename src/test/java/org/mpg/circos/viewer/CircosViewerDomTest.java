@@ -174,6 +174,8 @@ class CircosViewerDomTest {
             click(segments, "[data-segment-id='cohort-gain-1']");
             assertEquals("cohort-gain-1", script(segments, "window.selectionDetails[0].segmentIds[0]"));
             assertEquals("cohort-gain-1", script(segments, "window.selectionDetails[0].aggregateIds[0]"));
+            assertEquals("0", script(segments,
+                    "String(window.selectionDetails[0].selectedSourceResultIds.length)"));
         }
     }
 

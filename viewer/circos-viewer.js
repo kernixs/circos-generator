@@ -195,7 +195,8 @@
                     ? [data(selected, "event-group-id")] : [],
             aggregateIds: selected && data(selected, "aggregate-id")
                     ? [data(selected, "aggregate-id")] : [],
-            selectedSourceResultIds: selected && data(selected, "source-result-id")
+            selectedSourceResultIds: selected && !data(selected, "aggregate-id")
+                    && data(selected, "source-result-id")
                     ? [data(selected, "source-result-id")] : []
         };
     }

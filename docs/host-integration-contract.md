@@ -179,7 +179,8 @@ selectedSourceResultIds[]
 At most one segment or link ID is selected. Empty selection arrays mean that
 selection was cleared. For an aggregated cohort segment or link,
 `aggregateIds[0]` is the same caller-supplied opaque identity carried by its
-type-specific ID. The future host owns table synchronization, details display,
+type-specific ID, and `selectedSourceResultIds` is empty; the host must resolve
+contributors through its external aggregate mapping. The future host owns table synchronization, details display,
 contributor lookup, and any Events/Patients/Samples drill-down.
 
 ## Performance assumptions

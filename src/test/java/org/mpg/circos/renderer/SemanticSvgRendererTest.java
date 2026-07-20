@@ -55,6 +55,15 @@ class SemanticSvgRendererTest {
     }
 
     @Test
+    void omitsRepresentativeSourceResultIdentityFromAggregateSegments() throws Exception {
+        Document document = parse(new CircosApplication()
+                .render(TestFixtures.open("/examples/cohort-single-result.json")).xml());
+        var segment = firstWithClass(document, "circos-segment");
+        assertEquals("cohort-gain-1", segment.getAttribute("data-aggregate-id"));
+        assertFalse(segment.hasAttribute("data-source-result-id"));
+    }
+
+    @Test
     void positionsLegendInLowerLeftCornerOutsidePlotRings() throws Exception {
         Document document = parse(new CircosApplication()
                 .render(TestFixtures.open("/examples/gains-and-losses.json")).xml());
