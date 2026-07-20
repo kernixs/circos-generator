@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Check changed-file whitespace
+        if: github.event_name == 'pull_request'
+        run: git diff --check "origin/${{ github.base_ref }}...HEAD"
+
+      - name: Run functional test suite
+        run: ./mvnw --batch-mode verify
+
+      - name: Run informational performance characterization
+        run: ./mvnw --batch-mode -Pperformance test

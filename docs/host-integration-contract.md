@@ -12,6 +12,24 @@ The current clinician GUI row shape is a representative prototype only. A
 future host may obtain the same logical values through a different UI or
 backend.
 
+## Host presentation and concurrency requirements
+
+The host embeds the generated semantic SVG and viewer inline in its existing
+search page. Generating a plot must not open a new browser tab, navigate away
+from the search workflow, or launch the standalone development example. The
+host owns responsive placement; a split layout with the results/details area
+and plot each occupying approximately half the available screen is a supported
+integration pattern, not renderer behavior.
+
+The library and viewer have no global user or clinical session. A host may run
+multiple independent plot requests concurrently and may attach multiple viewer
+instances, provided each request supplies an immutable input snapshot and each
+viewer has its own container. A future service or adapter must keep input,
+output, selection state, contributor mappings, and clinical context scoped to
+the originating request/session. Production concurrency limits and deployment
+capacity are adapter concerns and must be tested after the integration
+mechanism is selected.
+
 ## Java rendering API
 
 The stable entry point is `org.mpg.circos.CircosApplication`:
