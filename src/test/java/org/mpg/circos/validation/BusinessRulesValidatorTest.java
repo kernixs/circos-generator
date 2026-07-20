@@ -12,6 +12,7 @@ import org.mpg.circos.TestFixtures;
 import org.mpg.circos.model.CircosPlot;
 import org.mpg.circos.model.EventType;
 import org.mpg.circos.model.GenomicSegment;
+import org.mpg.circos.model.SegmentDisplayType;
 
 class BusinessRulesValidatorTest {
     @Test
@@ -37,6 +38,26 @@ class BusinessRulesValidatorTest {
         assertTrue(exception.errors().stream().anyMatch(error ->
                 error.code().equals("SEGMENT_EVENT_TYPE_INVALID")
                         && error.path().equals("/segments/0/eventType")));
+    }
+
+    @Test
+    void rejectsDisplayTypeThatDoesNotMatchGeometryCategory() {
+        CircosApplication application = new CircosApplication();
+        CircosPlot valid = application.validate(TestFixtures.open("/examples/gains-and-losses.json"));
+        GenomicSegment original = valid.segments().get(0);
+        GenomicSegment invalid = new GenomicSegment(original.id(), original.sourceResultId(),
+                original.eventGroupId(), original.interval(), original.eventType(), original.copyNumber(),
+                original.confidence(), original.label(), SegmentDisplayType.DELETION,
+                original.annotations(), original.aggregate());
+        CircosPlot plot = new CircosPlot(valid.schemaVersion(), valid.plotId(), valid.label(), valid.mode(),
+                valid.assemblyId(), valid.coordinateConvention(), valid.sourceResultIds(), List.of(invalid),
+                valid.links());
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> application.render(plot));
+
+        assertTrue(exception.errors().stream().anyMatch(error ->
+                error.code().equals("SEGMENT_DISPLAY_TYPE_INVALID")
+                        && error.path().equals("/segments/0/displayType")));
     }
 
     @ParameterizedTest

@@ -154,14 +154,23 @@ public final class SemanticSvgRenderer {
                     .append("\" tabindex=\"0\" role=\"button\"")
                     .append(attr("data-segment-id", segment.id()))
                     .append(optionalAttr("data-event-group-id", segment.eventGroupId()))
-                    .append(attr("data-source-result-id", segment.sourceResultId()))
+                    .append(segment.aggregate() == null
+                            ? attr("data-source-result-id", segment.sourceResultId()) : "")
                     .append(attr("data-event-type", type.value()))
+                    .append(attr("data-display-type", segment.displayType() == null
+                            ? type.value() : segment.displayType().value()))
                     .append(optionalAttr("data-confidence", segment.confidence()))
                     .append(attr("data-chromosome", segment.interval().chromosome()))
                     .append(attr("data-start", Long.toString(segment.interval().start())))
                     .append(attr("data-end", Long.toString(segment.interval().end())))
                     .append(segment.copyNumber() == null ? "" : attr("data-copy-number", segment.copyNumber().toString()))
-                    .append(optionalAttr("data-label", segment.label())).append(">\n")
+                    .append(optionalAttr("data-label", segment.label()));
+            if (segment.annotations() != null) {
+                svg.append(listAttr("data-genes", segment.annotations().genes()))
+                        .append(listAttr("data-methods", segment.annotations().methods()));
+            }
+            appendAggregateAttributes(svg, segment.aggregate(), segment.aggregate() == null ? null : segment.id());
+            svg.append(">\n")
                     .append("          <path class=\"circos-segment-interval\" fill=\"")
                     .append(type == EventType.GAIN ? theme.gainColor() : theme.lossColor())
                     .append("\" fill-opacity=\"").append(elements.format(theme.eventOpacity())).append("\" d=\"")
@@ -194,11 +203,12 @@ public final class SemanticSvgRenderer {
                     .append(attr("data-target-chromosome", link.target().chromosome()))
                     .append(attr("data-target-position", Long.toString(link.target().position())))
                     .append(optionalAttr("data-label", link.label()));
-            if (link.aggregate() != null) {
-                svg.append(attr("data-aggregate-event-count", Integer.toString(link.aggregate().eventCount())))
-                        .append(attr("data-aggregate-patient-count", Integer.toString(link.aggregate().patientCount())))
-                        .append(attr("data-aggregate-sample-count", Integer.toString(link.aggregate().sampleCount())));
+            if (link.annotations() != null) {
+                svg.append(listAttr("data-source-genes", link.annotations().sourceGenes()))
+                        .append(listAttr("data-target-genes", link.annotations().targetGenes()))
+                        .append(listAttr("data-methods", link.annotations().methods()));
             }
+            appendAggregateAttributes(svg, link.aggregate(), link.aggregate() == null ? null : link.id());
             svg.append(">\n        <path class=\"circos-link-ribbon\" fill=\"").append(theme.linkColor())
                     .append("\" stroke=\"").append(theme.linkColor()).append("\" fill-opacity=\"")
                     .append(elements.format(theme.linkFillOpacity(shape.eventCount())))
@@ -295,6 +305,44 @@ public final class SemanticSvgRenderer {
             }
         });
         return escaped.append('"').toString();
+    }
+
+    private String jsonStringList(java.util.List<String> values) {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) json.append(',');
+            json.append(jsonString(values.get(i)));
+        }
+        return json.append(']').toString();
+    }
+
+    private String confidenceDistributionJson(java.util.List<org.mpg.circos.model.ConfidenceCount> values) {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) json.append(',');
+            var value = values.get(i);
+            json.append("{\"label\":").append(jsonString(value.label()))
+                    .append(",\"count\":").append(value.count()).append('}');
+        }
+        return json.append(']').toString();
+    }
+
+    private String listAttr(String name, java.util.List<String> values) {
+        return values.isEmpty() ? "" : attr(name, jsonStringList(values));
+    }
+
+    private void appendAggregateAttributes(StringBuilder svg, org.mpg.circos.model.CohortAggregate aggregate,
+            String aggregateId) {
+        if (aggregate == null) return;
+        svg.append(attr("data-aggregate-id", aggregateId))
+                .append(attr("data-aggregate-event-count", Integer.toString(aggregate.eventCount())))
+                .append(attr("data-aggregate-patient-count", Integer.toString(aggregate.patientCount())))
+                .append(attr("data-aggregate-sample-count", Integer.toString(aggregate.sampleCount())))
+                .append(optionalAttr("data-grouping-description", aggregate.groupingDescription()));
+        if (!aggregate.confidenceDistribution().isEmpty()) {
+            svg.append(attr("data-confidence-distribution",
+                    confidenceDistributionJson(aggregate.confidenceDistribution())));
+        }
     }
 
     private String attr(String name, String value) {

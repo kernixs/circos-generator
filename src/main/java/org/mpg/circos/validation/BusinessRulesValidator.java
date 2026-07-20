@@ -25,6 +25,12 @@ final class BusinessRulesValidator {
                 if (link.sourceResultId() == null) errors.add(new ValidationError("PATIENT_SOURCE_RESULT_REQUIRED",
                         "/links/" + i + "/sourceResultId", "patient links require sourceResultId"));
             }
+            for (int i = 0; i < plot.segments().size(); i++) {
+                if (plot.segments().get(i).aggregate() != null) {
+                    errors.add(new ValidationError("PATIENT_AGGREGATE_FORBIDDEN", "/segments/" + i + "/aggregate",
+                            "patient segments cannot contain aggregate metadata"));
+                }
+            }
         } else {
             if (plot.sourceResultIds().isEmpty()) errors.add(new ValidationError("COHORT_SCOPE_INVALID",
                     "/sourceResultIds", "cohort mode requires at least one source result ID"));
@@ -48,6 +54,13 @@ final class BusinessRulesValidator {
                 errors.add(new ValidationError("GAIN_COPY_NUMBER_INVALID", "/segments/" + i + "/copyNumber",
                         "absolute gain copyNumber must be at least 3"));
             }
+            if (segment.displayType() != null && segment.displayType().geometryType() != segment.eventType()) {
+                errors.add(new ValidationError("SEGMENT_DISPLAY_TYPE_INVALID", "/segments/" + i + "/displayType",
+                        "displayType must match the segment gain/loss geometry category"));
+            }
+            if (segment.aggregate() != null) {
+                validateAggregate(segment.aggregate(), "/segments/" + i + "/aggregate", errors);
+            }
         }
         return errors;
     }
@@ -60,6 +73,14 @@ final class BusinessRulesValidator {
         if (aggregate.patientCount() > aggregate.sampleCount() || aggregate.sampleCount() > aggregate.eventCount()) {
             errors.add(new ValidationError("AGGREGATE_COUNT_INCONSISTENT", path,
                     "counts must satisfy patientCount <= sampleCount <= eventCount"));
+        }
+        for (int i = 0; i < aggregate.confidenceDistribution().size(); i++) {
+            var value = aggregate.confidenceDistribution().get(i);
+            if (value.label().isBlank() || value.count() < 1) {
+                errors.add(new ValidationError("AGGREGATE_CONFIDENCE_INVALID",
+                        path + "/confidenceDistribution/" + i,
+                        "confidence distribution labels must be non-blank and counts must be positive"));
+            }
         }
     }
 }

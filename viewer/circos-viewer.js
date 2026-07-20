@@ -39,29 +39,133 @@
         return element.getAttribute("data-" + name);
     }
 
+    function meaningful(value) {
+        if (!value || !value.trim()) return null;
+        var normalized = value.trim().toLowerCase();
+        return normalized === "null" || normalized === "unknown" || normalized === "n/a" ? null : value.trim();
+    }
+
+    function jsonArray(element, name) {
+        var value = data(element, name);
+        if (!value) return [];
+        try {
+            var parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (ignored) {
+            return [];
+        }
+    }
+
+    function formatLength(basePairs) {
+        if (basePairs < 1000) return basePairs.toLocaleString("en-US") + " bp";
+        if (basePairs < 1000000) return formatDecimal(basePairs / 1000) + " kb";
+        return formatDecimal(basePairs / 1000000) + " Mb";
+    }
+
+    function formatDecimal(value) {
+        return value.toLocaleString("en-US", {minimumFractionDigits: 0, maximumFractionDigits: 2});
+    }
+
+    function summarizedGenes(genes) {
+        if (!genes.length) return null;
+        return genes.length > 10 ? genes.length.toLocaleString("en-US") + " genes" : genes.join(", ");
+    }
+
+    function methodsLine(methods) {
+        if (!methods.length) return null;
+        return (methods.length === 1 ? "Method: " : "Methods: ") + methods.join(", ");
+    }
+
+    function chromosomeRank(value) {
+        var number = Number(value);
+        if (Number.isInteger(number) && number >= 1 && number <= 22) return number;
+        if (value === "X") return 23;
+        if (value === "Y") return 24;
+        return 1000;
+    }
+
+    function canonicalLink(event) {
+        var source = {
+            chromosome: data(event, "source-chromosome"),
+            position: Number(data(event, "source-position")),
+            genes: jsonArray(event, "source-genes")
+        };
+        var target = {
+            chromosome: data(event, "target-chromosome"),
+            position: Number(data(event, "target-position")),
+            genes: jsonArray(event, "target-genes")
+        };
+        var sourceRank = chromosomeRank(source.chromosome);
+        var targetRank = chromosomeRank(target.chromosome);
+        if (sourceRank > targetRank || (sourceRank === targetRank && source.position > target.position)
+                || (sourceRank === targetRank && source.position === target.position
+                    && source.chromosome.localeCompare(target.chromosome) > 0)) {
+            return {source: target, target: source};
+        }
+        return {source: source, target: target};
+    }
+
+    function appendAggregate(lines, event) {
+        if (!data(event, "aggregate-event-count")) return;
+        lines.push("");
+        lines.push("Events: " + Number(data(event, "aggregate-event-count")).toLocaleString("en-US"));
+        lines.push("Samples: " + Number(data(event, "aggregate-sample-count")).toLocaleString("en-US"));
+        lines.push("Patients: " + Number(data(event, "aggregate-patient-count")).toLocaleString("en-US"));
+        var methods = methodsLine(jsonArray(event, "methods"));
+        if (methods) lines.push(methods);
+        var grouping = meaningful(data(event, "grouping-description"));
+        if (grouping) lines.push("Grouped by: " + grouping);
+        var distribution = jsonArray(event, "confidence-distribution").filter(function (value) {
+            return value && meaningful(String(value.label || "")) && Number(value.count) > 0;
+        });
+        if (distribution.length) {
+            lines.push("Confidence: " + distribution.map(function (value) {
+                return value.label + " " + Number(value.count).toLocaleString("en-US");
+            }).join(", "));
+        }
+    }
+
     function tooltipText(svg, event) {
-        var parts = [capitalize(data(event, "event-type"))];
+        var lines = [];
         if (hasClass(event, "circos-segment")) {
-            parts.push("chr" + data(event, "chromosome") + ":" + coordinate(data(event, "start"), true)
+            lines.push("Event type: " + capitalize(data(event, "display-type") || data(event, "event-type")));
+            lines.push("Genomic range: chr" + data(event, "chromosome") + ":"
+                    + coordinate(data(event, "start"), true)
                     + "–" + coordinate(data(event, "end"), false));
-            if (data(event, "copy-number")) parts.push("copy number " + data(event, "copy-number"));
+            lines.push("Interval length: "
+                    + formatLength(Number(data(event, "end")) - Number(data(event, "start"))));
+            if (data(event, "copy-number")) lines.push("Copy number: " + data(event, "copy-number"));
+            lines.push("Genome build: " + svg.getAttribute("data-assembly-id"));
+            var genes = summarizedGenes(jsonArray(event, "genes"));
+            if (genes) lines.push("Genes: " + genes);
+            if (data(event, "aggregate-event-count")) appendAggregate(lines, event);
+            else {
+                var segmentMethods = methodsLine(jsonArray(event, "methods"));
+                if (segmentMethods) lines.push(segmentMethods);
+                var segmentConfidence = meaningful(data(event, "confidence"));
+                if (segmentConfidence) lines.push("Confidence: " + segmentConfidence);
+            }
         } else {
-            parts.push("chr" + data(event, "source-chromosome") + ":"
-                    + coordinate(data(event, "source-position"), true)
-                    + " ↔ chr" + data(event, "target-chromosome") + ":"
-                    + coordinate(data(event, "target-position"), true));
-            if (data(event, "aggregate-event-count")) {
-                parts.push(data(event, "aggregate-event-count") + " events");
-            }
-            if (data(event, "aggregate-patient-count")) {
-                parts.push(data(event, "aggregate-patient-count") + " patients");
-            }
-            if (data(event, "aggregate-sample-count")) {
-                parts.push(data(event, "aggregate-sample-count") + " samples");
+            lines.push("Event type: " + capitalize(data(event, "event-type")));
+            var canonical = canonicalLink(event);
+            lines.push("Breakpoints: chr" + canonical.source.chromosome + ":"
+                    + coordinate(canonical.source.position, true)
+                    + " ↔ chr" + canonical.target.chromosome + ":" + coordinate(canonical.target.position, true));
+            lines.push("Genome build: " + svg.getAttribute("data-assembly-id"));
+            var sourceGenes = summarizedGenes(canonical.source.genes);
+            var targetGenes = summarizedGenes(canonical.target.genes);
+            if (sourceGenes && targetGenes) lines.push("Genes: " + sourceGenes + " ↔ " + targetGenes);
+            else if (sourceGenes) lines.push("Source genes: " + sourceGenes);
+            else if (targetGenes) lines.push("Target genes: " + targetGenes);
+            if (data(event, "aggregate-event-count")) appendAggregate(lines, event);
+            else {
+                var linkMethods = methodsLine(jsonArray(event, "methods"));
+                if (linkMethods) lines.push(linkMethods);
+                var linkConfidence = meaningful(data(event, "confidence"));
+                if (linkConfidence) lines.push("Confidence: " + linkConfidence);
             }
         }
-        if (data(event, "confidence")) parts.push(data(event, "confidence") + " confidence");
-        return parts.join(" · ");
+        return lines.join("\n");
     }
 
     function sourceResultIds(svg) {
@@ -85,7 +189,10 @@
             linkIds: link ? [data(selected, "link-id")] : [],
             eventGroupIds: selected && data(selected, "event-group-id")
                     ? [data(selected, "event-group-id")] : [],
-            selectedSourceResultIds: selected && data(selected, "source-result-id")
+            aggregateIds: selected && data(selected, "aggregate-id")
+                    ? [data(selected, "aggregate-id")] : [],
+            selectedSourceResultIds: selected && !data(selected, "aggregate-id")
+                    && data(selected, "source-result-id")
                     ? [data(selected, "source-result-id")] : []
         };
     }
@@ -125,8 +232,12 @@
 
         function positionTooltip(clientX, clientY) {
             var bounds = host.getBoundingClientRect();
-            tooltip.style.left = Math.max(8, clientX - bounds.left + 12) + "px";
-            tooltip.style.top = Math.max(8, clientY - bounds.top + 12) + "px";
+            var desiredLeft = clientX - bounds.left + 12;
+            var desiredTop = clientY - bounds.top + 12;
+            var maxLeft = Math.max(8, host.clientWidth - tooltip.offsetWidth - 8);
+            var maxTop = Math.max(8, host.clientHeight - tooltip.offsetHeight - 8);
+            tooltip.style.left = Math.min(Math.max(8, desiredLeft), maxLeft) + "px";
+            tooltip.style.top = Math.min(Math.max(8, desiredTop), maxTop) + "px";
         }
 
         function showTooltip(event, clientX, clientY) {

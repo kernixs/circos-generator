@@ -48,8 +48,11 @@ record NormalizedSegmentRow(
         long start,
         long end,
         EventType eventType,
+        SegmentDisplayType displayType,
         Integer copyNumber,
         String confidence,
+        List<String> genes,
+        List<String> methods,
         String label) {}
 
 record NormalizedLinkRow(
@@ -62,7 +65,10 @@ record NormalizedLinkRow(
         String targetSegmentId,
         String targetChromosome,
         long targetPosition,
-        String confidence) {}
+        String confidence,
+        List<String> sourceGenes,
+        List<String> targetGenes,
+        List<String> methods) {}
 
 record NormalizedCohortAggregateLinkRow(
         String aggregateId,
@@ -72,7 +78,9 @@ record NormalizedCohortAggregateLinkRow(
         long targetPosition,
         int eventCount,
         int patientCount,
-        int sampleCount) {}
+        int sampleCount,
+        String groupingDescription,
+        List<ConfidenceCount> confidenceDistribution) {}
 
 interface CircosInputAdapter<S, L, A> {
     CircosPlot patientPlot(String plotId, String genomeBuild,
@@ -147,7 +155,10 @@ The SVG must be inline before attaching the viewer:
 
   host.addEventListener("circos-selection-change", event => {
     // Resolve opaque IDs in host-owned state. Do not expect clinical records.
-    const selectedId = event.detail.segmentIds[0] || event.detail.linkIds[0] || null;
+    const selectedId = event.detail.aggregateIds[0]
+      || event.detail.segmentIds[0]
+      || event.detail.linkIds[0]
+      || null;
     hostApplication.onCircosSelection(selectedId);
   });
 </script>
@@ -161,13 +172,16 @@ plotSourceResultIds[]
 segmentIds[]
 linkIds[]
 eventGroupIds[]
+aggregateIds[]
 selectedSourceResultIds[]
 ```
 
 At most one segment or link ID is selected. Empty selection arrays mean that
-selection was cleared. In cohort mode, a selected link ID is the caller-supplied
-aggregate ID. The future host owns table synchronization, details display, and
-contributor lookup.
+selection was cleared. For an aggregated cohort segment or link,
+`aggregateIds[0]` is the same caller-supplied opaque identity carried by its
+type-specific ID, and `selectedSourceResultIds` is empty; the host must resolve
+contributors through its external aggregate mapping. The future host owns table synchronization, details display,
+contributor lookup, and any Events/Patients/Samples drill-down.
 
 ## Performance assumptions
 

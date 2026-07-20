@@ -46,9 +46,35 @@
         "eventGroupId": {"type": ["string", "null"], "maxLength": 256},
         "interval": {"$ref": "#/$defs/interval"},
         "eventType": {"enum": ["gain", "loss"]},
+        "displayType": {"enum": ["gain", "duplication", "amplification", "loss", "deletion"]},
         "copyNumber": {"type": ["integer", "null"]},
         "confidence": {"type": ["string", "null"], "maxLength": 64},
+        "annotations": {"$ref": "#/$defs/segmentAnnotations"},
+        "aggregate": {"$ref": "#/$defs/aggregate"},
         "label": {"type": "string", "maxLength": 512}
+      }
+    },
+    "textList": {
+      "type": "array",
+      "maxItems": 500,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 256}
+    },
+    "segmentAnnotations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "genes": {"$ref": "#/$defs/textList"},
+        "methods": {"$ref": "#/$defs/textList"}
+      }
+    },
+    "linkAnnotations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceGenes": {"$ref": "#/$defs/textList"},
+        "targetGenes": {"$ref": "#/$defs/textList"},
+        "methods": {"$ref": "#/$defs/textList"}
       }
     },
     "endpoint": {
@@ -68,7 +94,21 @@
       "properties": {
         "eventCount": {"type": "integer", "minimum": 1},
         "patientCount": {"type": "integer", "minimum": 1},
-        "sampleCount": {"type": "integer", "minimum": 1}
+        "sampleCount": {"type": "integer", "minimum": 1},
+        "groupingDescription": {"type": "string", "minLength": 1, "maxLength": 128},
+        "confidenceDistribution": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "count"],
+            "properties": {
+              "label": {"type": "string", "minLength": 1, "maxLength": 64},
+              "count": {"type": "integer", "minimum": 1}
+            }
+          }
+        }
       }
     },
     "link": {
@@ -84,6 +124,7 @@
         "eventType": {"const": "translocation"},
         "confidence": {"type": ["string", "null"], "maxLength": 64},
         "aggregate": {"$ref": "#/$defs/aggregate"},
+        "annotations": {"$ref": "#/$defs/linkAnnotations"},
         "label": {"type": "string", "maxLength": 512}
       }
     }

@@ -46,13 +46,15 @@ public final class PlotInputReader {
                         node.get("interval").get("start").asLong(), node.get("interval").get("end").asLong()),
                 org.mpg.circos.model.EventType.valueOf(node.get("eventType").asText().toUpperCase()),
                 node.get("copyNumber").isNull() ? null : node.get("copyNumber").asInt(),
-                textOrNull(node, "confidence"), textOrNull(node, "label"))));
+                textOrNull(node, "confidence"), textOrNull(node, "label"), displayType(node),
+                segmentAnnotations(node.get("annotations")), aggregate(node.get("aggregate")))));
         var links = new java.util.ArrayList<org.mpg.circos.model.GenomicLink>();
         root.withArray("links").forEach(node -> links.add(new org.mpg.circos.model.GenomicLink(
                 node.get("id").asText(), textOrNull(node, "eventGroupId"), endpoint(node.get("source")),
                 endpoint(node.get("target")), textOrNull(node, "sourceResultId"),
                 org.mpg.circos.model.EventType.valueOf(node.get("eventType").asText().toUpperCase()),
-                textOrNull(node, "confidence"), aggregate(node.get("aggregate")), textOrNull(node, "label"))));
+                textOrNull(node, "confidence"), aggregate(node.get("aggregate")), textOrNull(node, "label"),
+                linkAnnotations(node.get("annotations")))));
         var sourceIds = new java.util.ArrayList<String>();
         root.withArray("sourceResultIds").forEach(node -> sourceIds.add(node.asText()));
         return new CircosPlot(org.mpg.circos.model.SchemaVersion.V1_0, root.get("plotId").asText(),
@@ -77,8 +79,37 @@ public final class PlotInputReader {
 
     private org.mpg.circos.model.CohortAggregate aggregate(JsonNode node) {
         if (node == null || node.isNull()) return null;
+        var confidenceDistribution = new java.util.ArrayList<org.mpg.circos.model.ConfidenceCount>();
+        JsonNode distribution = node.get("confidenceDistribution");
+        if (distribution != null) distribution.forEach(value -> confidenceDistribution.add(
+                new org.mpg.circos.model.ConfidenceCount(value.get("label").asText(), value.get("count").asInt())));
         return new org.mpg.circos.model.CohortAggregate(node.get("eventCount").asInt(),
-                node.get("patientCount").asInt(), node.get("sampleCount").asInt());
+                node.get("patientCount").asInt(), node.get("sampleCount").asInt(),
+                textOrNull(node, "groupingDescription"), confidenceDistribution);
+    }
+
+    private org.mpg.circos.model.SegmentDisplayType displayType(JsonNode node) {
+        String value = textOrNull(node, "displayType");
+        return value == null ? null : org.mpg.circos.model.SegmentDisplayType.valueOf(value.toUpperCase());
+    }
+
+    private org.mpg.circos.model.SegmentAnnotationMetadata segmentAnnotations(JsonNode node) {
+        if (node == null || node.isNull()) return null;
+        return new org.mpg.circos.model.SegmentAnnotationMetadata(textList(node, "genes"),
+                textList(node, "methods"));
+    }
+
+    private org.mpg.circos.model.LinkAnnotationMetadata linkAnnotations(JsonNode node) {
+        if (node == null || node.isNull()) return null;
+        return new org.mpg.circos.model.LinkAnnotationMetadata(textList(node, "sourceGenes"),
+                textList(node, "targetGenes"), textList(node, "methods"));
+    }
+
+    private java.util.List<String> textList(JsonNode node, String field) {
+        var values = new java.util.ArrayList<String>();
+        JsonNode array = node.get(field);
+        if (array != null) array.forEach(value -> values.add(value.asText()));
+        return values;
     }
 
     private String textOrNull(JsonNode node, String field) {
