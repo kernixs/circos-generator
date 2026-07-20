@@ -149,9 +149,12 @@ must:
   labels, metadata, and all other renderer input fields;
 - preserve individual cohort CNV segments rather than merging them into a
   density track;
-- group cohort connections by a trusted source event/group identity, falling
-  back to exact normalized endpoint identity when no such grouping exists, and
-  calculate explicit event, patient, and sample counts;
+- group cohort connections by a caller-supplied cohort aggregate ID. A database
+  `event_group_id` is not a cohort identity unless the caller explicitly
+  guarantees that meaning. When no cohort aggregate ID exists, use exact
+  normalized breakpoint identity; never collapse distinct events solely by
+  chromosome pair or averaged positions. The caller calculates explicit event,
+  patient, and sample counts;
 - assign each cohort connection a stable opaque aggregate ID and retain the
   aggregate-to-contributing-findings mapping outside the JSON and SVG; and
 - apply any application-specific input-size policy early enough to let a user
@@ -778,8 +781,8 @@ fully determines plot membership. The viewer will:
   `.circos-event`;
 - show an escaped text-only tooltip on hover or keyboard focus without changing
   selection or emitting an application-state event;
-- format tooltip coordinates as one-based inclusive values and include the
-  normalized genome build; segment tooltips include event type, chromosome,
+- format tooltip coordinates as one-based inclusive values; segment tooltips
+  include event type, chromosome,
   coordinates, copy number, and confidence when present, while cohort-link
   tooltips also include event, patient, and sample counts;
 - maintain at most one selected event; clicking it again or clicking the plot
@@ -790,13 +793,6 @@ fully determines plot membership. The viewer will:
 - support keyboard traversal through focusable events, show the hover tooltip
   on focus, select with Enter or Space, clear with Escape, and provide a visible
   focus outline;
-- support mouse-wheel zoom and drag-to-pan without visible controls, plus a
-  programmatic reset API; the responsive container preserves the square aspect
-  ratio and the canonical `684 684` view box;
-- expose a programmatic export API that emits a clean, reset-view,
-  deterministic SVG by default and accepts an explicit option to retain current
-  selection highlighting; it removes tooltips and other viewer-only runtime
-  nodes before serialization; and
 - emit a `circos-selection-change` `CustomEvent` whose `detail` contains only
   opaque `plotId`, `plotSourceResultIds`, `segmentIds`, `linkIds`,
   `eventGroupIds`, and `selectedSourceResultIds`. In cohort mode a selected
@@ -810,6 +806,9 @@ specific table or details widget, regenerates a path, recalculates an angle,
 moves an endpoint, changes event membership, or infers cohort aggregation.
 Clinical identity is neither drawn in the SVG nor included in viewer events;
 any patient/cohort context belongs to the host outside the plot.
+
+Mouse-wheel zoom, drag-to-pan, reset, and viewer-side export remain deferred
+beyond the initial V1 viewer slice. No visible controls are reserved for them.
 
 ## 9. Rendering pipeline
 
@@ -941,6 +940,15 @@ isolation, and callback event payloads. Tests will assert the absence of upload,
 track-configuration, post-generation filter, and visible plot-control UI. A
 guard test will assert that viewer source contains no independent chromosome-
 length table, circular path generator, database client, or contributor map.
+
+Informational performance characterization uses engineering assumptions rather
+than clinical production limits: approximately 500 rendered findings is a large
+patient plot and approximately 10,000 is a large cohort plot. It records Java
+generation time, UTF-8 SVG size, browser DOM load time, hover time, and selection
+time without machine-dependent pass/fail thresholds. Deterministic functional
+tests separately accept exactly 20,000 events and reject 20,001 events under the
+default configurable safety ceiling. Visual and clinical readability are
+reviewed separately from technical renderability.
 
 ## 11. Initial synthetic examples
 
