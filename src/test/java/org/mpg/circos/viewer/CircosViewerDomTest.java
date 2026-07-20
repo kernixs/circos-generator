@@ -20,17 +20,20 @@ class CircosViewerDomTest {
         try (WebClient browser = browser()) {
             HtmlPage segments = page(browser, "/examples/gains-and-losses.json");
             hover(segments, ".event-gain");
-            assertTrue(tooltip(segments).contains("Amplification\nchr18:37,912,423–39,587,423"));
+            assertTrue(tooltip(segments).contains(
+                    "Event type: Amplification\nGenomic range: chr18:37,912,423–39,587,423"));
             assertTrue(tooltip(segments).contains("Genome build: GRCh37"));
             assertEquals("false", script(segments,
                     "String(document.querySelector('.circos-tooltip').hidden)"));
             assertEquals("0", script(segments, "String(window.selectionDetails.length)"));
             hover(segments, ".event-loss");
-            assertTrue(tooltip(segments).contains("Deletion\nchr7:16,014,079–18,239,079"));
+            assertTrue(tooltip(segments).contains(
+                    "Event type: Deletion\nGenomic range: chr7:16,014,079–18,239,079"));
 
             HtmlPage links = page(browser, "/examples/crossing-links.json");
             hover(links, ".circos-link");
-            assertTrue(tooltip(links).contains("Translocation\nchr1:1,000,001 ↔ chr22:5,000,001"));
+            assertTrue(tooltip(links).contains(
+                    "Event type: Translocation\nBreakpoints: chr1:1,000,001 ↔ chr22:5,000,001"));
             assertEquals("0", script(links, "String(window.selectionDetails.length)"));
         }
     }
@@ -42,7 +45,8 @@ class CircosViewerDomTest {
 
             hover(page, "[data-segment-id='bp-gain']");
             String gain = tooltip(page);
-            assertTrue(gain.contains("Duplication\nchr1:101–1,099\n999 bp"));
+            assertTrue(gain.contains("Event type: Duplication\nGenomic range: chr1:101–1,099"
+                    + "\nInterval length: 999 bp"));
             assertTrue(gain.contains("Copy number: 3"));
             assertTrue(gain.contains("Genes: EGFR <safe> & MET"));
             assertTrue(gain.contains("Method: FISH"));
@@ -51,7 +55,8 @@ class CircosViewerDomTest {
 
             hover(page, "[data-segment-id='kb-loss']");
             String loss = tooltip(page);
-            assertTrue(loss.contains("Loss\nchr2:2,001–14,500\n12.5 kb"));
+            assertTrue(loss.contains("Event type: Loss\nGenomic range: chr2:2,001–14,500"
+                    + "\nInterval length: 12.5 kb"));
             assertFalse(loss.contains("Copy number:"));
             assertFalse(loss.contains("Genes:"));
             assertFalse(loss.contains("Method:"));
@@ -86,14 +91,14 @@ class CircosViewerDomTest {
             HtmlPage segments = page(browser, "/examples/cohort-single-result.json");
             hover(segments, "[data-segment-id='cohort-gain-1']");
             String gain = tooltip(segments);
-            assertTrue(gain.contains("1 event · 1 patient · 1 sample"));
+            assertTrue(gain.contains("Events: 1\nSamples: 1\nPatients: 1"));
             assertTrue(gain.contains("Methods: Microarray, WGS"));
             assertTrue(gain.contains("Grouped by: Exact interval"));
             assertTrue(gain.contains("Confidence: High 1"));
 
             hover(segments, "[data-segment-id='cohort-loss-1']");
             String loss = tooltip(segments);
-            assertTrue(loss.contains("2 events · 2 patients · 2 samples"));
+            assertTrue(loss.contains("Events: 2\nSamples: 2\nPatients: 2"));
             assertTrue(loss.contains("Method: WGS"));
             assertTrue(loss.contains("Confidence: High 1, Low 1"));
 
@@ -101,7 +106,7 @@ class CircosViewerDomTest {
             hover(links, "[data-link-id='aggregate-9-22']");
             String link = tooltip(links);
             assertTrue(link.contains("chr9:66,858,501 ↔ chr22:11,609,501"));
-            assertTrue(link.contains("6 events · 3 patients · 4 samples"));
+            assertTrue(link.contains("Events: 6\nSamples: 4\nPatients: 3"));
             assertTrue(link.contains("Grouped by: Exact breakpoints"));
             assertFalse(link.toLowerCase().contains("average"));
         }

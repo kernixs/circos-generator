@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Circos Viewer Examples</title>
-  <link rel="stylesheet" href="circos-viewer.css">
+  <link rel="stylesheet" href="circos-viewer.css?v=3">
   <style>
     body { margin: 0; padding: 24px; color: #182230; background: #f6f7f9; font-family: Arial, sans-serif; }
     main { display: grid; gap: 32px; justify-items: center; }
@@ -42,7 +42,7 @@
     <p class="selection" aria-live="polite">No event selected</p>
   </article>
 </main>
-<script src="circos-viewer.js"></script>
+<script src="circos-viewer.js?v=3"></script>
 <script>
   document.addEventListener("circos-selection-change", function (event) {
     var output = event.target.parentElement.querySelector(".selection");

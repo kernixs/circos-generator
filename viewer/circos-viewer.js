@@ -76,11 +76,6 @@
         return (methods.length === 1 ? "Method: " : "Methods: ") + methods.join(", ");
     }
 
-    function pluralizedCount(value, singular, plural) {
-        var number = Number(value);
-        return number.toLocaleString("en-US") + " " + (number === 1 ? singular : plural);
-    }
-
     function chromosomeRank(value) {
         var number = Number(value);
         if (Number.isInteger(number) && number >= 1 && number <= 22) return number;
@@ -113,11 +108,9 @@
     function appendAggregate(lines, event) {
         if (!data(event, "aggregate-event-count")) return;
         lines.push("");
-        lines.push([
-            pluralizedCount(data(event, "aggregate-event-count"), "event", "events"),
-            pluralizedCount(data(event, "aggregate-patient-count"), "patient", "patients"),
-            pluralizedCount(data(event, "aggregate-sample-count"), "sample", "samples")
-        ].join(" · "));
+        lines.push("Events: " + Number(data(event, "aggregate-event-count")).toLocaleString("en-US"));
+        lines.push("Samples: " + Number(data(event, "aggregate-sample-count")).toLocaleString("en-US"));
+        lines.push("Patients: " + Number(data(event, "aggregate-patient-count")).toLocaleString("en-US"));
         var methods = methodsLine(jsonArray(event, "methods"));
         if (methods) lines.push(methods);
         var grouping = meaningful(data(event, "grouping-description"));
@@ -135,10 +128,12 @@
     function tooltipText(svg, event) {
         var lines = [];
         if (hasClass(event, "circos-segment")) {
-            lines.push(capitalize(data(event, "display-type") || data(event, "event-type")));
-            lines.push("chr" + data(event, "chromosome") + ":" + coordinate(data(event, "start"), true)
+            lines.push("Event type: " + capitalize(data(event, "display-type") || data(event, "event-type")));
+            lines.push("Genomic range: chr" + data(event, "chromosome") + ":"
+                    + coordinate(data(event, "start"), true)
                     + "–" + coordinate(data(event, "end"), false));
-            lines.push(formatLength(Number(data(event, "end")) - Number(data(event, "start"))));
+            lines.push("Interval length: "
+                    + formatLength(Number(data(event, "end")) - Number(data(event, "start"))));
             if (data(event, "copy-number")) lines.push("Copy number: " + data(event, "copy-number"));
             lines.push("Genome build: " + svg.getAttribute("data-assembly-id"));
             var genes = summarizedGenes(jsonArray(event, "genes"));
@@ -151,9 +146,10 @@
                 if (segmentConfidence) lines.push("Confidence: " + segmentConfidence);
             }
         } else {
-            lines.push(capitalize(data(event, "event-type")));
+            lines.push("Event type: " + capitalize(data(event, "event-type")));
             var canonical = canonicalLink(event);
-            lines.push("chr" + canonical.source.chromosome + ":" + coordinate(canonical.source.position, true)
+            lines.push("Breakpoints: chr" + canonical.source.chromosome + ":"
+                    + coordinate(canonical.source.position, true)
                     + " ↔ chr" + canonical.target.chromosome + ":" + coordinate(canonical.target.position, true));
             lines.push("Genome build: " + svg.getAttribute("data-assembly-id"));
             var sourceGenes = summarizedGenes(canonical.source.genes);
