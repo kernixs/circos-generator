@@ -1,16 +1,22 @@
 # Technical design: Java semantic Circos renderer
 
-Status: **Proposed for approval** · Contract version: **JSON Schema 1.0** ·
+Status: **Implemented and feature-frozen** · Contract version: **JSON Schema 1.0** ·
 Target runtime: **Java 21** · Build system: **Maven**
 
-This document is the authoritative, standalone specification and implementation
-gate for the new Circos component. A developer must be able to implement and
+This document is the authoritative, standalone Version 1 specification for the
+Circos component. A developer must be able to maintain and
 test the repository using this document and repository-owned fixtures/resources
 alone; access to the MPG repository, its audit, database, R template, or stored
 outputs is not required. This specification records all normative legacy-parity
 behavior retained by V1 while establishing safer coordinates, explicit
-missing-value behavior, and stable semantic SVG. It does not authorize
-implementation.
+missing-value behavior, and stable semantic SVG.
+
+The renderer/viewer feature set described here is frozen for Version 1. Changes
+are limited to correctness, security, accessibility, deterministic-output, and
+integration-blocking fixes that preserve the JSON, Java, semantic SVG, and
+viewer callback contracts. New visual tracks, viewer controls, clinical-data
+behavior, or integration mechanisms require separate approval and a later
+versioned design.
 
 ## 1. Scope and design principles
 
@@ -1040,10 +1046,9 @@ The design records these approved constraints:
 9. Deterministic structural SVG tests precede golden SVG approval; PNG
    regression infrastructure remains deferred.
 
-Phase 1 (model, schema, assemblies, parsing, validation, and validation-only
-CLI) is complete. After separate Phase 2 approval, work proceeds in gated,
-testable slices: public render options and size enforcement; layout geometry;
-semantic SVG renderer and structural tests; CLI SVG output and end-to-end
-fixtures; then canonical SVG review. Viewer implementation begins only after
-the Java-generated SVG contract and structural parity are approved. PNG
-regression work may begin only after SVG parity is established.
+The model, schema, assemblies, parsing, validation, configurable size
+enforcement, layout, semantic SVG renderer, CLI SVG output, representative
+fixtures, and initial interactive viewer are implemented and tested as the
+Version 1 baseline. PNG regression, clinical GUI behavior, contributor
+resolution, and the production integration mechanism remain intentionally
+outside this frozen baseline.

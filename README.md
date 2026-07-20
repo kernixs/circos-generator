@@ -1,14 +1,20 @@
 # Circos Generator
 
-This repository will provide a reusable Java 21 library that renders complete,
+This repository provides a reusable Java 21 library that renders complete,
 semantic Circos plots as SVG, plus a standalone browser viewer that enhances the
 same SVG with interaction.
 
-The current baseline contains the Java 21 model, validation, deterministic
+Version 1.0 is the approved, feature-frozen renderer/viewer baseline. It contains
+the Java 21 model, validation, deterministic
 layout and semantic SVG renderer, CLI harness, and a dependency-free initial
 interactive viewer. Database and application integrations remain outside this
 repository. The authoritative specification is
 [docs/technical-design.md](docs/technical-design.md).
+
+Version 1 maintenance is limited to correctness, security, accessibility, and
+integration-blocking fixes. New renderer or viewer capabilities require an
+explicitly approved later contract/version rather than incremental feature
+expansion of the Version 1 baseline.
 
 Run the validation suite with:
 
