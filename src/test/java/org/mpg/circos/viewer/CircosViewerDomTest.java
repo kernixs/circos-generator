@@ -241,6 +241,27 @@ class CircosViewerDomTest {
         }
     }
 
+    @Test
+    void loadReturnsPromiseThatResolvesToMountedController() throws Exception {
+        try (WebClient browser = browser()) {
+            String viewer = Files.readString(Path.of("viewer/circos-viewer.js"));
+            String html = "<!doctype html><html><body><div id=\"host\"></div><script>"
+                    + "window.fetch=function(){return Promise.resolve({ok:true,text:function(){"
+                    + "return Promise.resolve(" + javascriptString(svg("/examples/gains-and-losses.json"))
+                    + ");}});};</script><script>" + viewer + "</script><script>"
+                    + "var host=document.getElementById('host');"
+                    + "window.loadPromise=CircosViewer.load(host,'fixture.svg');"
+                    + "window.loadPromise.then(function(controller){window.loadedController=controller;});"
+                    + "</script></body></html>";
+            HtmlPage page = browser.loadHtmlCodeIntoCurrentWindow(html);
+            browser.waitForBackgroundJavaScript(1_000);
+
+            assertEquals("function", script(page, "typeof window.loadPromise.then"));
+            assertEquals("1", script(page, "String(host.querySelectorAll('svg').length)"));
+            assertEquals("null", script(page, "String(window.loadedController.selectedId())"));
+        }
+    }
+
     private WebClient browser() {
         WebClient browser = new WebClient(BrowserVersion.CHROME);
         browser.getOptions().setCssEnabled(false);
@@ -307,6 +328,9 @@ class CircosViewerDomTest {
     }
 
     private String javascriptString(String value) {
-        return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'";
+        return "'" + value.replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n") + "'";
     }
 }

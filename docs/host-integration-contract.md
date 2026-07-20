@@ -289,8 +289,6 @@ The SVG must be inline before attaching the viewer:
 <script src="circos-viewer.js"></script>
 <script>
   const host = document.getElementById("plot");
-  CircosViewer.load(host, "/generated/example.svg");
-
   host.addEventListener("circos-selection-change", event => {
     // Resolve opaque IDs in host-owned state. Do not expect clinical records.
     const selectedId = event.detail.aggregateIds[0]
@@ -299,6 +297,12 @@ The SVG must be inline before attaching the viewer:
       || null;
     hostApplication.onCircosSelection(selectedId);
   });
+
+  // load() is asynchronous and resolves to the container-scoped controller.
+  const controllerPromise = CircosViewer.load(
+    host,
+    "/generated/example.svg"
+  );
 </script>
 ```
 

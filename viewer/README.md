@@ -13,9 +13,20 @@ The dependency-free public API is available as `window.CircosViewer`:
 
 - `attach(container, svgElement)` enhances an existing inline semantic SVG.
 - `mount(container, svgText)` parses, inserts, and enhances SVG text.
-- `load(container, url)` fetches, inserts, and enhances a generated SVG.
+- `load(container, url)` asynchronously fetches, inserts, and enhances a
+  generated SVG.
 
-Each method returns a container-scoped controller:
+`attach()` and `mount()` return a container-scoped controller immediately.
+`load()` returns a `Promise` that resolves to the same controller after the SVG
+has been fetched and mounted. Callers must await or chain that promise before
+using the controller:
+
+```javascript
+const controller = await CircosViewer.load(container, "/generated/plot.svg");
+controller.clearSelection();
+```
+
+The resolved controller provides:
 
 - `svg` references the attached inline SVG element.
 - `selectedId()` returns the one selected opaque event ID or `null`.
