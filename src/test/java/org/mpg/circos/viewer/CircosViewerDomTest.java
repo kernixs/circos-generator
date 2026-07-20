@@ -33,7 +33,8 @@ class CircosViewerDomTest {
             HtmlPage links = page(browser, "/examples/crossing-links.json");
             hover(links, ".circos-link");
             assertTrue(tooltip(links).contains(
-                    "Event type: Translocation\nBreakpoints: chr1:1,000,001 ↔ chr22:5,000,001"));
+                    "Event type: Translocation\nBreakpoints: chr9:133,600,000 ↔ chr22:23,600,000"));
+            assertTrue(tooltip(links).contains("Genes: ABL1 ↔ BCR\nMethod: Karyotype\nConfidence: HIGH"));
             assertEquals("0", script(links, "String(window.selectionDetails.length)"));
         }
     }
