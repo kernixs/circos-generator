@@ -199,6 +199,69 @@ class CircosViewerDomTest {
         }
     }
 
+    @Test
+    void embeddedViewerInstancesKeepSelectionAndCallbacksIsolated() throws Exception {
+        try (WebClient browser = browser()) {
+            HtmlPage page = twoViewerPage(browser);
+
+            click(page, "#host-a .event-gain");
+            assertEquals("1", script(page, "String(document.querySelectorAll('#host-a .is-selected').length)"));
+            assertEquals("0", script(page, "String(document.querySelectorAll('#host-b .is-selected').length)"));
+            assertEquals("1", script(page, "String(window.detailsA.length)"));
+            assertEquals("0", script(page, "String(window.detailsB.length)"));
+
+            click(page, "#host-b .circos-link");
+            assertEquals("1", script(page, "String(document.querySelectorAll('#host-a .is-selected').length)"));
+            assertEquals("1", script(page, "String(document.querySelectorAll('#host-b .is-selected').length)"));
+            assertEquals("gain-1", script(page, "window.detailsA[0].segmentIds[0]"));
+            assertEquals("link-a", script(page, "window.detailsB[0].linkIds[0]"));
+
+            script(page, "window.controllerA.destroy()");
+            assertEquals("0", script(page, "String(document.querySelectorAll('#host-a .circos-tooltip').length)"));
+            assertEquals("1", script(page, "String(document.querySelectorAll('#host-b .is-selected').length)"));
+
+            click(page, "#host-b .circos-link");
+            assertEquals("0", script(page, "String(document.querySelectorAll('#host-b .is-selected').length)"));
+            assertEquals("1", script(page, "String(window.detailsA.length)"));
+            assertEquals("2", script(page, "String(window.detailsB.length)"));
+            assertEquals("0", script(page, "String(window.detailsB[1].linkIds.length)"));
+        }
+    }
+
+    @Test
+    void replacingViewerDestroysOldControllerWithoutDuplicateListeners() throws Exception {
+        try (WebClient browser = browser()) {
+            HtmlPage page = page(browser, "/examples/gains-and-losses.json");
+
+            script(page, "window.viewerController=CircosViewer.attach(host)");
+            assertEquals("1", script(page, "String(document.querySelectorAll('.circos-tooltip').length)"));
+            click(page, ".event-gain");
+            assertEquals("1", script(page, "String(window.selectionDetails.length)"));
+            assertEquals("gain-1", script(page, "window.selectionDetails[0].segmentIds[0]"));
+        }
+    }
+
+    @Test
+    void loadReturnsPromiseThatResolvesToMountedController() throws Exception {
+        try (WebClient browser = browser()) {
+            String viewer = Files.readString(Path.of("viewer/circos-viewer.js"));
+            String html = "<!doctype html><html><body><div id=\"host\"></div><script>"
+                    + "window.fetch=function(){return Promise.resolve({ok:true,text:function(){"
+                    + "return Promise.resolve(" + javascriptString(svg("/examples/gains-and-losses.json"))
+                    + ");}});};</script><script>" + viewer + "</script><script>"
+                    + "var host=document.getElementById('host');"
+                    + "window.loadPromise=CircosViewer.load(host,'fixture.svg');"
+                    + "window.loadPromise.then(function(controller){window.loadedController=controller;});"
+                    + "</script></body></html>";
+            HtmlPage page = browser.loadHtmlCodeIntoCurrentWindow(html);
+            browser.waitForBackgroundJavaScript(1_000);
+
+            assertEquals("function", script(page, "typeof window.loadPromise.then"));
+            assertEquals("1", script(page, "String(host.querySelectorAll('svg').length)"));
+            assertEquals("null", script(page, "String(window.loadedController.selectedId())"));
+        }
+    }
+
     private WebClient browser() {
         WebClient browser = new WebClient(BrowserVersion.CHROME);
         browser.getOptions().setCssEnabled(false);
@@ -207,8 +270,7 @@ class CircosViewerDomTest {
     }
 
     private HtmlPage page(WebClient browser, String fixture) throws Exception {
-        String svg = new CircosApplication().render(TestFixtures.open(fixture)).xml()
-                .replaceFirst("<\\?xml version=\"1\\.0\" encoding=\"UTF-8\"\\?>\\R", "");
+        String svg = svg(fixture);
         String viewer = Files.readString(Path.of("viewer/circos-viewer.js"));
         String html = "<!doctype html><html><body><div id=\"host\">" + svg + "</div><script>"
                 + viewer + "</script><script>window.selectionDetails=[];"
@@ -217,6 +279,25 @@ class CircosViewerDomTest {
                 + "host.addEventListener('circos-selection-change',function(event){"
                 + "window.selectionDetails.push(event.detail);});</script></body></html>";
         return browser.loadHtmlCodeIntoCurrentWindow(html);
+    }
+
+    private HtmlPage twoViewerPage(WebClient browser) throws Exception {
+        String viewer = Files.readString(Path.of("viewer/circos-viewer.js"));
+        String html = "<!doctype html><html><body><div id=\"host-a\">"
+                + svg("/examples/gains-and-losses.json") + "</div><div id=\"host-b\">"
+                + svg("/examples/crossing-links.json") + "</div><script>" + viewer
+                + "</script><script>window.detailsA=[];window.detailsB=[];"
+                + "var hostA=document.getElementById('host-a');var hostB=document.getElementById('host-b');"
+                + "window.controllerA=CircosViewer.attach(hostA);window.controllerB=CircosViewer.attach(hostB);"
+                + "hostA.addEventListener('circos-selection-change',function(event){detailsA.push(event.detail);});"
+                + "hostB.addEventListener('circos-selection-change',function(event){detailsB.push(event.detail);});"
+                + "</script></body></html>";
+        return browser.loadHtmlCodeIntoCurrentWindow(html);
+    }
+
+    private String svg(String fixture) {
+        return new CircosApplication().render(TestFixtures.open(fixture)).xml()
+                .replaceFirst("<\\?xml version=\"1\\.0\" encoding=\"UTF-8\"\\?>\\R", "");
     }
 
     private void hover(HtmlPage page, String selector) {
@@ -247,6 +328,9 @@ class CircosViewerDomTest {
     }
 
     private String javascriptString(String value) {
-        return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'";
+        return "'" + value.replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n") + "'";
     }
 }
