@@ -9,6 +9,19 @@ python3 -m http.server 8000
 Then visit `http://localhost:8000/viewer/`. The example page loads the
 representative Java-generated SVG files and inserts each SVG inline in the DOM.
 
+The viewer accepts semantic SVG contracts `1.0` and `2.0`. Version 2 links
+carry zero-based, half-open source and target intervals using
+`data-source-start`, `data-source-end`, `data-target-start`, and
+`data-target-end`. The displayed one-based ranges are labeled **Linked genomic
+regions**. Midpoint anchors are approximate display geometry and must not be
+interpreted as confirmed breakpoints. Version 1 point attributes remain
+supported only for compatibility.
+
+Caller-provided event labels, genes, copy number, confidence, aggregate patient,
+sample and event counts, methods, aggregation descriptions, and escaped
+additional key/value metadata are shown when present. An aggregation based on
+identical V2 endpoints is displayed as **Aggregation: Exact genomic intervals**.
+
 The dependency-free public API is available as `window.CircosViewer`:
 
 - `attach(container, svgElement)` enhances an existing inline semantic SVG.

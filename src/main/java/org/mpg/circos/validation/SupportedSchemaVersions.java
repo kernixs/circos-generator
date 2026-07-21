@@ -4,7 +4,8 @@ import java.util.Map;
 
 public final class SupportedSchemaVersions {
     private static final Map<String, String> SCHEMAS = Map.of(
-            "1.0", "/schema/circos-plot-1.0.schema.json");
+            "1.0", "/schema/circos-plot-1.0.schema.json",
+            "2.0", "/schema/circos-plot-2.0.schema.json");
 
     private SupportedSchemaVersions() {}
 

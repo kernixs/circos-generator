@@ -17,6 +17,26 @@ The authoritative normalized input and renderer behavior are defined in
 summarized in [the viewer README](../viewer/README.md). This document owns only
 the boundary between those stable contracts and a future clinician-search host.
 
+## Version 2 renderer boundary
+
+The host or caller decides which biological records should be visualized and
+performs any source-specific classification before constructing renderer
+objects. The renderer accepts only `GAIN`, `LOSS`, and `TRANSLOCATION`
+visualization categories; it does not accept database aliases as new event
+types. Gains and losses contain one affected genomic interval. Translocations
+contain two affected genomic interval endpoints.
+
+All renderer coordinates are zero-based, half-open. For display, a link uses the
+midpoint of each affected interval by default. Midpoint attachment positions are
+approximate geometry and are not evidence of exact or confirmed breakpoints.
+The host must not describe them as such. Exact-interval cohort grouping should
+be described as `Exact genomic intervals`.
+
+Version 1 point inputs remain readable through a compatibility adapter, but all
+new host integration should emit Schema Version 2.0 interval endpoints. The
+renderer does not query a database, choose eligible records, or know JDBC, H2,
+FileMaker, MPG schemas, clinician search, or source-system query logic.
+
 ## Responsibility boundaries
 
 | Component | Owns | Must not own |

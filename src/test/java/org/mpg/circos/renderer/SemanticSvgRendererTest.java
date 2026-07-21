@@ -36,6 +36,25 @@ class SemanticSvgRendererTest {
     }
 
     @Test
+    void emitsVersionTwoIntervalEndpointsAndMidpointPolicy() throws Exception {
+        Document document = parse(new CircosApplication()
+                .render(TestFixtures.open("/examples/v2-interval-links.json")).xml());
+        assertEquals("2.0", document.getDocumentElement().getAttribute("data-contract-version"));
+        assertEquals("ZERO_BASED_HALF_OPEN",
+                document.getDocumentElement().getAttribute("data-coordinate-convention"));
+        var link = firstWithClass(document, "circos-link");
+        assertEquals("133500000", link.getAttribute("data-source-start"));
+        assertEquals("133700000", link.getAttribute("data-source-end"));
+        assertEquals("133600000", link.getAttribute("data-source-anchor"));
+        assertEquals("23500000", link.getAttribute("data-target-start"));
+        assertEquals("23700000", link.getAttribute("data-target-end"));
+        assertEquals("midpoint", link.getAttribute("data-attachment-policy"));
+        assertFalse(link.hasAttribute("data-source-position"));
+        assertEquals("{\"Review status\":\"Confirmed\",\"Source\":\"Caller supplied\"}",
+                link.getAttribute("data-additional-metadata"));
+    }
+
+    @Test
     void emitsCohortCountsAndOmitsPatientLinkResultIdentity() throws Exception {
         Document document = parse(new CircosApplication()
                 .render(TestFixtures.open("/examples/cohort-aggregate.json")).xml());

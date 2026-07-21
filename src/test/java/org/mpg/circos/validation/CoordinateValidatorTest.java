@@ -22,7 +22,9 @@ class CoordinateValidatorTest {
                 Arguments.of("/fixtures/invalid/unknown-chromosome.json", "coordinate.chromosome.unsupported"),
                 Arguments.of("/fixtures/invalid/reversed-interval.json", "coordinate.interval.order"),
                 Arguments.of("/fixtures/invalid/segment-out-of-bounds.json", "coordinate.interval.bounds"),
-                Arguments.of("/fixtures/invalid/link-position-out-of-bounds.json", "coordinate.point.bounds"));
+                Arguments.of("/fixtures/invalid/link-position-out-of-bounds.json", "coordinate.point.bounds"),
+                Arguments.of("/fixtures/invalid/v2-reversed-link-interval.json", "coordinate.interval.order"),
+                Arguments.of("/fixtures/invalid/v2-link-interval-out-of-bounds.json", "coordinate.interval.bounds"));
     }
 
     @Test void acceptsChromosomeStartAndLastBase() throws Exception {

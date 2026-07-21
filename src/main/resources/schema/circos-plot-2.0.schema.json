@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://circos-generator.org/schema/circos-plot-2.0.schema.json",
+  "title": "Circos plot input 2.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "plotId", "mode", "assemblyId", "sourceResultIds", "segments", "links"],
+  "properties": {
+    "schemaVersion": {"const": "2.0"},
+    "plotId": {"$ref": "#/$defs/id"},
+    "label": {"type": "string", "maxLength": 512},
+    "mode": {"enum": ["patient", "cohort"]},
+    "assemblyId": {"enum": ["GRCh37", "hg19", "GRCh38", "hg38"]},
+    "coordinateConvention": {"const": "ZERO_BASED_HALF_OPEN"},
+    "sourceResultIds": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"}
+    },
+    "segments": {"type": "array", "items": {"$ref": "#/$defs/segment"}},
+    "links": {"type": "array", "items": {"$ref": "#/$defs/link"}}
+  },
+  "$defs": {
+    "id": {
+      "type": "string", "minLength": 1, "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001F\\u007F]+$"
+    },
+    "interval": {
+      "type": "object", "additionalProperties": false,
+      "required": ["chromosome", "start", "end"],
+      "properties": {
+        "chromosome": {"type": "string", "minLength": 1, "maxLength": 16},
+        "start": {"type": "integer"},
+        "end": {"type": "integer"}
+      }
+    },
+    "textList": {
+      "type": "array", "maxItems": 500, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 256}
+    },
+    "additionalMetadata": {
+      "type": "object", "maxProperties": 100,
+      "propertyNames": {"minLength": 1, "maxLength": 128},
+      "additionalProperties": {"type": "string", "maxLength": 512}
+    },
+    "segmentAnnotations": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "genes": {"$ref": "#/$defs/textList"},
+        "methods": {"$ref": "#/$defs/textList"},
+        "additionalMetadata": {"$ref": "#/$defs/additionalMetadata"}
+      }
+    },
+    "linkAnnotations": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "sourceGenes": {"$ref": "#/$defs/textList"},
+        "targetGenes": {"$ref": "#/$defs/textList"},
+        "methods": {"$ref": "#/$defs/textList"},
+        "additionalMetadata": {"$ref": "#/$defs/additionalMetadata"}
+      }
+    },
+    "segment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "sourceResultId", "eventGroupId", "interval", "eventType", "copyNumber", "confidence"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "sourceResultId": {"$ref": "#/$defs/id"},
+        "eventGroupId": {"type": ["string", "null"], "maxLength": 256},
+        "interval": {"$ref": "#/$defs/interval"},
+        "eventType": {"enum": ["gain", "loss"]},
+        "displayType": {"enum": ["gain", "duplication", "amplification", "loss", "deletion"]},
+        "copyNumber": {"type": ["integer", "null"]},
+        "confidence": {"type": ["string", "null"], "maxLength": 64},
+        "annotations": {"$ref": "#/$defs/segmentAnnotations"},
+        "aggregate": {"$ref": "#/$defs/aggregate"},
+        "label": {"type": "string", "maxLength": 512}
+      }
+    },
+    "endpoint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["segmentId", "interval"],
+      "properties": {
+        "segmentId": {"$ref": "#/$defs/id"},
+        "interval": {"$ref": "#/$defs/interval"}
+      }
+    },
+    "aggregate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["eventCount", "patientCount", "sampleCount"],
+      "properties": {
+        "eventCount": {"type": "integer", "minimum": 1},
+        "patientCount": {"type": "integer", "minimum": 1},
+        "sampleCount": {"type": "integer", "minimum": 1},
+        "groupingDescription": {"type": "string", "minLength": 1, "maxLength": 128},
+        "confidenceDistribution": {
+          "type": "array", "maxItems": 32,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["label", "count"],
+            "properties": {
+              "label": {"type": "string", "minLength": 1, "maxLength": 64},
+              "count": {"type": "integer", "minimum": 1}
+            }
+          }
+        }
+      }
+    },
+    "link": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "eventGroupId", "source", "target", "eventType", "confidence"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "eventGroupId": {"type": ["string", "null"], "maxLength": 256},
+        "source": {"$ref": "#/$defs/endpoint"},
+        "target": {"$ref": "#/$defs/endpoint"},
+        "sourceResultId": {"$ref": "#/$defs/id"},
+        "eventType": {"const": "translocation"},
+        "confidence": {"type": ["string", "null"], "maxLength": 64},
+        "aggregate": {"$ref": "#/$defs/aggregate"},
+        "annotations": {"$ref": "#/$defs/linkAnnotations"},
+        "label": {"type": "string", "maxLength": 512}
+      }
+    }
+  }
+}

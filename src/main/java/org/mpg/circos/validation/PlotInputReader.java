@@ -48,16 +48,17 @@ public final class PlotInputReader {
                 node.get("copyNumber").isNull() ? null : node.get("copyNumber").asInt(),
                 textOrNull(node, "confidence"), textOrNull(node, "label"), displayType(node),
                 segmentAnnotations(node.get("annotations")), aggregate(node.get("aggregate")))));
+        var version = org.mpg.circos.model.SchemaVersion.fromValue(root.get("schemaVersion").asText());
         var links = new java.util.ArrayList<org.mpg.circos.model.GenomicLink>();
         root.withArray("links").forEach(node -> links.add(new org.mpg.circos.model.GenomicLink(
-                node.get("id").asText(), textOrNull(node, "eventGroupId"), endpoint(node.get("source")),
-                endpoint(node.get("target")), textOrNull(node, "sourceResultId"),
+                node.get("id").asText(), textOrNull(node, "eventGroupId"), endpoint(node.get("source"), version),
+                endpoint(node.get("target"), version), textOrNull(node, "sourceResultId"),
                 org.mpg.circos.model.EventType.valueOf(node.get("eventType").asText().toUpperCase()),
                 textOrNull(node, "confidence"), aggregate(node.get("aggregate")), textOrNull(node, "label"),
                 linkAnnotations(node.get("annotations")))));
         var sourceIds = new java.util.ArrayList<String>();
         root.withArray("sourceResultIds").forEach(node -> sourceIds.add(node.asText()));
-        return new CircosPlot(org.mpg.circos.model.SchemaVersion.V1_0, root.get("plotId").asText(),
+        return new CircosPlot(version, root.get("plotId").asText(),
                 textOrNull(root, "label"), org.mpg.circos.model.PlotMode.valueOf(root.get("mode").asText().toUpperCase()),
                 root.get("assemblyId").asText(), coordinateConvention(root),
                 sourceIds, segments, links);
@@ -72,9 +73,16 @@ public final class PlotInputReader {
 
     public CircosPlot readAndValidate(InputStream input) { return read(input); }
 
-    private org.mpg.circos.model.LinkEndpoint endpoint(JsonNode node) {
+    private org.mpg.circos.model.LinkEndpoint endpoint(JsonNode node,
+            org.mpg.circos.model.SchemaVersion version) {
+        if (version == org.mpg.circos.model.SchemaVersion.V1_0) {
+            return org.mpg.circos.model.LinkEndpoint.fromLegacyPoint(node.get("segmentId").asText(),
+                    node.get("chromosome").asText(), node.get("position").asLong());
+        }
+        JsonNode interval = node.get("interval");
         return new org.mpg.circos.model.LinkEndpoint(node.get("segmentId").asText(),
-                node.get("chromosome").asText(), node.get("position").asLong());
+                new org.mpg.circos.model.GenomicInterval(interval.get("chromosome").asText(),
+                        interval.get("start").asLong(), interval.get("end").asLong()));
     }
 
     private org.mpg.circos.model.CohortAggregate aggregate(JsonNode node) {
@@ -96,19 +104,27 @@ public final class PlotInputReader {
     private org.mpg.circos.model.SegmentAnnotationMetadata segmentAnnotations(JsonNode node) {
         if (node == null || node.isNull()) return null;
         return new org.mpg.circos.model.SegmentAnnotationMetadata(textList(node, "genes"),
-                textList(node, "methods"));
+                textList(node, "methods"), metadata(node, "additionalMetadata"));
     }
 
     private org.mpg.circos.model.LinkAnnotationMetadata linkAnnotations(JsonNode node) {
         if (node == null || node.isNull()) return null;
         return new org.mpg.circos.model.LinkAnnotationMetadata(textList(node, "sourceGenes"),
-                textList(node, "targetGenes"), textList(node, "methods"));
+                textList(node, "targetGenes"), textList(node, "methods"),
+                metadata(node, "additionalMetadata"));
     }
 
     private java.util.List<String> textList(JsonNode node, String field) {
         var values = new java.util.ArrayList<String>();
         JsonNode array = node.get(field);
         if (array != null) array.forEach(value -> values.add(value.asText()));
+        return values;
+    }
+
+    private java.util.Map<String, String> metadata(JsonNode node, String field) {
+        var values = new java.util.TreeMap<String, String>();
+        JsonNode object = node.get(field);
+        if (object != null) object.fields().forEachRemaining(entry -> values.put(entry.getKey(), entry.getValue().asText()));
         return values;
     }
 

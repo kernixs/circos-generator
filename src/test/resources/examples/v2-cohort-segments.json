@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "2.0",
+  "plotId": "v2-cohort-segments",
+  "mode": "cohort",
+  "assemblyId": "GRCh38",
+  "coordinateConvention": "ZERO_BASED_HALF_OPEN",
+  "sourceResultIds": ["result-only"],
+  "segments": [
+    {
+      "id": "cohort-gain-1", "sourceResultId": "result-only", "eventGroupId": null,
+      "interval": {"chromosome": "5", "start": 10000000, "end": 13000000},
+      "eventType": "gain", "displayType": "gain", "copyNumber": 3, "confidence": null,
+      "annotations": {"genes": ["TERT"], "methods": ["Microarray", "WGS"]},
+      "aggregate": {"eventCount": 1, "patientCount": 1, "sampleCount": 1,
+        "groupingDescription": "Exact genomic interval",
+        "confidenceDistribution": [{"label": "High", "count": 1}]}
+    },
+    {
+      "id": "cohort-loss-1", "sourceResultId": "result-only", "eventGroupId": null,
+      "interval": {"chromosome": "7", "start": 55000000, "end": 55550000},
+      "eventType": "loss", "displayType": "deletion", "copyNumber": null, "confidence": null,
+      "annotations": {"genes": ["EGFR"], "methods": ["WGS"]},
+      "aggregate": {"eventCount": 2, "patientCount": 2, "sampleCount": 2,
+        "groupingDescription": "Caller-defined aggregate",
+        "confidenceDistribution": [{"label": "High", "count": 1}, {"label": "Low", "count": 1}]}
+    }
+  ],
+  "links": [{
+    "id": "aggregate-single-1", "eventGroupId": "cohort-event-1",
+    "source": {"segmentId": "aggregate-source", "interval": {"chromosome": "12", "start": 24500000, "end": 25500000}},
+    "target": {"segmentId": "aggregate-target", "interval": {"chromosome": "5", "start": 11000000, "end": 12000000}},
+    "eventType": "translocation", "confidence": null,
+    "aggregate": {"eventCount": 1, "patientCount": 1, "sampleCount": 1,
+      "groupingDescription": "Exact genomic intervals"},
+    "annotations": {"sourceGenes": ["ETV6"], "targetGenes": ["TERT"], "methods": ["FISH"]}
+  }]
+}

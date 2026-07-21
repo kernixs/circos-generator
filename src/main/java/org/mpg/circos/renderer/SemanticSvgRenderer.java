@@ -37,8 +37,10 @@ public final class SemanticSvgRenderer {
         StringBuilder svg = new StringBuilder(32_768);
         svg.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         svg.append("<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" id=\"circos-plot-")
-                .append(plotToken).append("\" class=\"circos-plot\" data-contract-version=\"1.0\"")
-                .append(attr("data-plot-id", plot.plotId()))
+                .append(plotToken).append("\" class=\"circos-plot\"")
+                                .append(attr("data-contract-version", plot.schemaVersion().value()))
+                                .append(attr("data-coordinate-convention", plot.coordinateConvention().name()))
+                                .append(attr("data-plot-id", plot.plotId()))
                 .append(attr("data-plot-mode", plot.mode().value()))
                 .append(attr("data-assembly-id", plot.assemblyId()))
                 .append(" viewBox=\"0 0 ").append(elements.format(geometry.viewBoxSize())).append(' ')
@@ -167,7 +169,8 @@ public final class SemanticSvgRenderer {
                     .append(optionalAttr("data-label", segment.label()));
             if (segment.annotations() != null) {
                 svg.append(listAttr("data-genes", segment.annotations().genes()))
-                        .append(listAttr("data-methods", segment.annotations().methods()));
+                        .append(listAttr("data-methods", segment.annotations().methods()))
+                        .append(metadataAttr(segment.annotations().additionalMetadata()));
             }
             appendAggregateAttributes(svg, segment.aggregate(), segment.aggregate() == null ? null : segment.id());
             svg.append(">\n")
@@ -198,15 +201,15 @@ public final class SemanticSvgRenderer {
                     .append(optionalAttr("data-source-result-id", link.sourceResultId()))
                     .append(attr("data-event-type", link.eventType().value()))
                     .append(optionalAttr("data-confidence", link.confidence()))
-                    .append(attr("data-source-chromosome", link.source().chromosome()))
-                    .append(attr("data-source-position", Long.toString(link.source().position())))
-                    .append(attr("data-target-chromosome", link.target().chromosome()))
-                    .append(attr("data-target-position", Long.toString(link.target().position())))
+                    .append(linkEndpointAttributes(link.source(), "source"))
+                    .append(linkEndpointAttributes(link.target(), "target"))
+                    .append(link.source().isLegacyPoint() ? "" : attr("data-attachment-policy", "midpoint"))
                     .append(optionalAttr("data-label", link.label()));
             if (link.annotations() != null) {
                 svg.append(listAttr("data-source-genes", link.annotations().sourceGenes()))
                         .append(listAttr("data-target-genes", link.annotations().targetGenes()))
-                        .append(listAttr("data-methods", link.annotations().methods()));
+                        .append(listAttr("data-methods", link.annotations().methods()))
+                        .append(metadataAttr(link.annotations().additionalMetadata()));
             }
             appendAggregateAttributes(svg, link.aggregate(), link.aggregate() == null ? null : link.id());
             svg.append(">\n        <path class=\"circos-link-ribbon\" fill=\"").append(theme.linkColor())
@@ -329,6 +332,32 @@ public final class SemanticSvgRenderer {
 
     private String listAttr(String name, java.util.List<String> values) {
         return values.isEmpty() ? "" : attr(name, jsonStringList(values));
+    }
+
+    private String linkEndpointAttributes(org.mpg.circos.model.LinkEndpoint endpoint, String prefix) {
+        StringBuilder attributes = new StringBuilder()
+                .append(attr("data-" + prefix + "-chromosome", endpoint.chromosome()));
+        if (endpoint.isLegacyPoint()) {
+            return attributes.append(attr("data-" + prefix + "-position",
+                    Long.toString(endpoint.legacyPosition()))).toString();
+        }
+        return attributes.append(attr("data-" + prefix + "-start", Long.toString(endpoint.interval().start())))
+                .append(attr("data-" + prefix + "-end", Long.toString(endpoint.interval().end())))
+                .append(attr("data-" + prefix + "-anchor",
+                                        java.math.BigDecimal.valueOf(endpoint.midpoint()).toPlainString()))
+                .toString();
+    }
+
+    private String metadataAttr(java.util.Map<String, String> values) {
+        if (values.isEmpty()) return "";
+        StringBuilder json = new StringBuilder("{");
+        boolean first = true;
+        for (var entry : new java.util.TreeMap<>(values).entrySet()) {
+            if (!first) json.append(',');
+            first = false;
+            json.append(jsonString(entry.getKey())).append(':').append(jsonString(entry.getValue()));
+        }
+        return attr("data-additional-metadata", json.append('}').toString());
     }
 
     private void appendAggregateAttributes(StringBuilder svg, org.mpg.circos.model.CohortAggregate aggregate,

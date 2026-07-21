@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "2.0",
+  "plotId": "v2-interval-links",
+  "mode": "patient",
+  "assemblyId": "GRCh38",
+  "coordinateConvention": "ZERO_BASED_HALF_OPEN",
+  "sourceResultIds": ["result-links"],
+  "segments": [],
+  "links": [
+    {
+      "id": "link-a",
+      "eventGroupId": "event-a",
+      "source": {
+        "segmentId": "region-a1",
+        "interval": {"chromosome": "9", "start": 133500000, "end": 133700000}
+      },
+      "target": {
+        "segmentId": "region-a2",
+        "interval": {"chromosome": "22", "start": 23500000, "end": 23700000}
+      },
+      "sourceResultId": "result-links",
+      "eventType": "translocation",
+      "confidence": "HIGH",
+      "label": "ABL1–BCR linked regions",
+      "annotations": {
+        "sourceGenes": ["ABL1"],
+        "targetGenes": ["BCR"],
+        "methods": ["Karyotype"],
+        "additionalMetadata": {
+          "Review status": "Confirmed",
+          "Source": "Caller supplied"
+        }
+      }
+    },
+    {
+      "id": "link-b",
+      "eventGroupId": "event-b",
+      "source": {
+        "segmentId": "region-b1",
+        "interval": {"chromosome": "3", "start": 59000000, "end": 61000000}
+      },
+      "target": {
+        "segmentId": "region-b2",
+        "interval": {"chromosome": "X", "start": 89000000, "end": 91000000}
+      },
+      "sourceResultId": "result-links",
+      "eventType": "translocation",
+      "confidence": "MEDIUM"
+    }
+  ]
+}

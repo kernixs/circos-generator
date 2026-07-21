@@ -56,6 +56,17 @@
         }
     }
 
+    function jsonObject(element, name) {
+        var value = data(element, name);
+        if (!value) return {};
+        try {
+            var parsed = JSON.parse(value);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+        } catch (ignored) {
+            return {};
+        }
+    }
+
     function formatLength(basePairs) {
         if (basePairs < 1000) return basePairs.toLocaleString("en-US") + " bp";
         if (basePairs < 1000000) return formatDecimal(basePairs / 1000) + " kb";
@@ -84,25 +95,46 @@
         return 1000;
     }
 
+    function linkEndpoint(event, prefix) {
+        var position = data(event, prefix + "-position");
+        var legacy = position !== null;
+        return {
+            chromosome: data(event, prefix + "-chromosome"),
+            start: legacy ? Number(position) : Number(data(event, prefix + "-start")),
+            end: legacy ? Number(position) + 1 : Number(data(event, prefix + "-end")),
+            legacy: legacy,
+            genes: jsonArray(event, prefix + "-genes")
+        };
+    }
+
     function canonicalLink(event) {
-        var source = {
-            chromosome: data(event, "source-chromosome"),
-            position: Number(data(event, "source-position")),
-            genes: jsonArray(event, "source-genes")
-        };
-        var target = {
-            chromosome: data(event, "target-chromosome"),
-            position: Number(data(event, "target-position")),
-            genes: jsonArray(event, "target-genes")
-        };
+        var source = linkEndpoint(event, "source");
+        var target = linkEndpoint(event, "target");
         var sourceRank = chromosomeRank(source.chromosome);
         var targetRank = chromosomeRank(target.chromosome);
-        if (sourceRank > targetRank || (sourceRank === targetRank && source.position > target.position)
-                || (sourceRank === targetRank && source.position === target.position
+        if (sourceRank > targetRank || (sourceRank === targetRank && source.start > target.start)
+                || (sourceRank === targetRank && source.start === target.start && source.end > target.end)
+                || (sourceRank === targetRank && source.start === target.start && source.end === target.end
                     && source.chromosome.localeCompare(target.chromosome) > 0)) {
             return {source: target, target: source};
         }
         return {source: source, target: target};
+    }
+
+    function genomicRegion(endpoint) {
+        var start = coordinate(endpoint.start, true);
+        if (endpoint.legacy) return "chr" + endpoint.chromosome + ":" + start;
+        return "chr" + endpoint.chromosome + ":" + start + "–" + coordinate(endpoint.end, false);
+    }
+
+    function appendDisplayMetadata(lines, event) {
+        var label = meaningful(data(event, "label"));
+        if (label) lines.push("Event label: " + label);
+        var metadata = jsonObject(event, "additional-metadata");
+        Object.keys(metadata).sort().forEach(function (key) {
+            var value = meaningful(String(metadata[key]));
+            if (value) lines.push(key + ": " + value);
+        });
     }
 
     function appendAggregate(lines, event) {
@@ -114,7 +146,10 @@
         var methods = methodsLine(jsonArray(event, "methods"));
         if (methods) lines.push(methods);
         var grouping = meaningful(data(event, "grouping-description"));
-        if (grouping) lines.push("Grouped by: " + grouping);
+        if (grouping) {
+            if (grouping.toLowerCase() === "exact breakpoints") grouping = "Exact genomic intervals";
+            lines.push("Aggregation: " + grouping);
+        }
         var distribution = jsonArray(event, "confidence-distribution").filter(function (value) {
             return value && meaningful(String(value.label || "")) && Number(value.count) > 0;
         });
@@ -129,6 +164,7 @@
         var lines = [];
         if (hasClass(event, "circos-segment")) {
             lines.push("Event type: " + capitalize(data(event, "display-type") || data(event, "event-type")));
+            appendDisplayMetadata(lines, event);
             lines.push("Genomic range: chr" + data(event, "chromosome") + ":"
                     + coordinate(data(event, "start"), true)
                     + "–" + coordinate(data(event, "end"), false));
@@ -147,16 +183,19 @@
             }
         } else {
             lines.push("Event type: " + capitalize(data(event, "event-type")));
+            appendDisplayMetadata(lines, event);
             var canonical = canonicalLink(event);
-            lines.push("Breakpoints: chr" + canonical.source.chromosome + ":"
-                    + coordinate(canonical.source.position, true)
-                    + " ↔ chr" + canonical.target.chromosome + ":" + coordinate(canonical.target.position, true));
+            lines.push("Linked genomic regions: " + genomicRegion(canonical.source)
+                    + " ↔ " + genomicRegion(canonical.target));
             lines.push("Genome build: " + svg.getAttribute("data-assembly-id"));
             var sourceGenes = summarizedGenes(canonical.source.genes);
             var targetGenes = summarizedGenes(canonical.target.genes);
             if (sourceGenes && targetGenes) lines.push("Genes: " + sourceGenes + " ↔ " + targetGenes);
             else if (sourceGenes) lines.push("Source genes: " + sourceGenes);
             else if (targetGenes) lines.push("Target genes: " + targetGenes);
+            if (data(event, "attachment-policy") === "midpoint") {
+                lines.push("Attachment: Approximate interval midpoint");
+            }
             if (data(event, "aggregate-event-count")) appendAggregate(lines, event);
             else {
                 var linkMethods = methodsLine(jsonArray(event, "methods"));
@@ -210,7 +249,8 @@
         if (instances.has(host)) instances.get(host).destroy();
         var svg = suppliedSvg || host.querySelector("svg.circos-plot");
         requireElement(svg, "svg");
-        if (!hasClass(svg, "circos-plot") || svg.getAttribute("data-contract-version") !== "1.0") {
+        var contractVersion = svg.getAttribute("data-contract-version");
+        if (!hasClass(svg, "circos-plot") || (contractVersion !== "1.0" && contractVersion !== "2.0")) {
             throw new Error("Unsupported Circos SVG contract");
         }
 

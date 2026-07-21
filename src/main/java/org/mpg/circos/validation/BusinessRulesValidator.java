@@ -43,6 +43,12 @@ final class BusinessRulesValidator {
                 if (link.aggregate() != null) validateAggregate(link.aggregate(), "/links/" + i + "/aggregate", errors);
             }
         }
+        for (int i = 0; i < plot.links().size(); i++) {
+            if (plot.links().get(i).eventType() != EventType.TRANSLOCATION) {
+                errors.add(new ValidationError("LINK_EVENT_TYPE_INVALID", "/links/" + i + "/eventType",
+                        "link eventType must be translocation"));
+            }
+        }
         for (int i = 0; i < plot.segments().size(); i++) {
             var segment = plot.segments().get(i);
             if (segment.eventType() != EventType.GAIN && segment.eventType() != EventType.LOSS) {

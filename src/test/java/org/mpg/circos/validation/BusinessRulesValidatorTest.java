@@ -41,6 +41,25 @@ class BusinessRulesValidatorTest {
     }
 
     @Test
+    void rejectsGainOrLossLinkFromDirectJavaApi() {
+        CircosApplication application = new CircosApplication();
+        CircosPlot valid = application.validate(TestFixtures.open("/examples/v2-interval-links.json"));
+        var original = valid.links().getFirst();
+        var invalid = new org.mpg.circos.model.GenomicLink(original.id(), original.eventGroupId(),
+                original.source(), original.target(), original.sourceResultId(), EventType.GAIN,
+                original.confidence(), original.aggregate(), original.label(), original.annotations());
+        CircosPlot plot = new CircosPlot(valid.schemaVersion(), valid.plotId(), valid.label(), valid.mode(),
+                valid.assemblyId(), valid.coordinateConvention(), valid.sourceResultIds(), valid.segments(),
+                List.of(invalid));
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> application.render(plot));
+
+        assertTrue(exception.errors().stream().anyMatch(error ->
+                error.code().equals("LINK_EVENT_TYPE_INVALID")
+                        && error.path().equals("/links/0/eventType")));
+    }
+
+    @Test
     void rejectsDisplayTypeThatDoesNotMatchGeometryCategory() {
         CircosApplication application = new CircosApplication();
         CircosPlot valid = application.validate(TestFixtures.open("/examples/gains-and-losses.json"));

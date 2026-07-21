@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "2.0",
+  "plotId": "v2-cohort-aggregate",
+  "mode": "cohort",
+  "assemblyId": "GRCh38",
+  "coordinateConvention": "ZERO_BASED_HALF_OPEN",
+  "sourceResultIds": ["result-a", "result-b"],
+  "segments": [],
+  "links": [
+    {
+      "id": "aggregate-9-22",
+      "eventGroupId": "cohort-9-22",
+      "source": {
+        "segmentId": "aggregate-source",
+        "interval": {"chromosome": "9", "start": 66000000, "end": 67717000}
+      },
+      "target": {
+        "segmentId": "aggregate-target",
+        "interval": {"chromosome": "22", "start": 11000000, "end": 12219000}
+      },
+      "eventType": "translocation",
+      "confidence": null,
+      "aggregate": {
+        "eventCount": 6,
+        "patientCount": 3,
+        "sampleCount": 4,
+        "groupingDescription": "Exact genomic intervals",
+        "confidenceDistribution": [
+          {"label": "High", "count": 4},
+          {"label": "Medium", "count": 2}
+        ]
+      },
+      "annotations": {
+        "sourceGenes": ["ABL1"],
+        "targetGenes": ["BCR"],
+        "methods": ["Karyotype", "FISH"]
+      }
+    }
+  ]
+}

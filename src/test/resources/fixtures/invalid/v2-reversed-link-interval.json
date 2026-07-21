@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "2.0",
+  "plotId": "invalid-v2-reversed",
+  "mode": "patient",
+  "assemblyId": "GRCh38",
+  "coordinateConvention": "ZERO_BASED_HALF_OPEN",
+  "sourceResultIds": ["result-1"],
+  "segments": [],
+  "links": [{
+    "id": "link-1",
+    "eventGroupId": null,
+    "source": {"segmentId": "region-1", "interval": {"chromosome": "1", "start": 200, "end": 100}},
+    "target": {"segmentId": "region-2", "interval": {"chromosome": "2", "start": 300, "end": 400}},
+    "sourceResultId": "result-1",
+    "eventType": "translocation",
+    "confidence": null
+  }]
+}
