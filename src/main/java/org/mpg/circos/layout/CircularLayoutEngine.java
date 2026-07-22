@@ -107,17 +107,18 @@ public final class CircularLayoutEngine {
         List<PlotGeometry.LinkGeometry> result = new ArrayList<>();
         for (var link : plot.links()) {
             int count = link.aggregate() == null ? 1 : link.aggregate().eventCount();
-            long halfWidth = ribbonWidths.halfWidthBases(count);
             SectorGeometry sourceSector = requiredSector(sectors, link.source().chromosome());
             SectorGeometry targetSector = requiredSector(sectors, link.target().chromosome());
-            long sourceLength = lengths.get(link.source().chromosome());
-            long targetLength = lengths.get(link.target().chromosome());
-            long sourceStart = Math.max(0L, link.source().position() - halfWidth);
-            long sourceEnd = Math.min(sourceLength, link.source().position() + halfWidth);
-            long targetStart = Math.max(0L, link.target().position() - halfWidth);
-            long targetEnd = Math.min(targetLength, link.target().position() + halfWidth);
-            double sourceAngle = angleMapper.mapBoundary(sourceSector, link.source().position());
-            double targetAngle = angleMapper.mapBoundary(targetSector, link.target().position());
+            org.mpg.circos.model.GenomicInterval sourceInterval = displayInterval(link.source(),
+                    lengths.get(link.source().chromosome()), count);
+            org.mpg.circos.model.GenomicInterval targetInterval = displayInterval(link.target(),
+                    lengths.get(link.target().chromosome()), count);
+            long sourceStart = sourceInterval.start();
+            long sourceEnd = sourceInterval.end();
+            long targetStart = targetInterval.start();
+            long targetEnd = targetInterval.end();
+            double sourceAngle = angleMapper.mapBoundary(sourceSector, link.source().midpoint());
+            double targetAngle = angleMapper.mapBoundary(targetSector, link.target().midpoint());
             RibbonGeometry ribbon = new RibbonGeometry(tracks.linkRadius(),
                     angleMapper.mapBoundary(sourceSector, sourceStart),
                     angleMapper.mapBoundary(sourceSector, sourceEnd),
@@ -128,6 +129,15 @@ public final class CircularLayoutEngine {
             result.add(new PlotGeometry.LinkGeometry(link.id(), ribbon, count));
         }
         return result;
+    }
+
+    private org.mpg.circos.model.GenomicInterval displayInterval(
+            org.mpg.circos.model.LinkEndpoint endpoint, long chromosomeLength, int eventCount) {
+        if (!endpoint.isLegacyPoint()) return endpoint.interval();
+        long halfWidth = ribbonWidths.halfWidthBases(eventCount);
+        long position = endpoint.legacyPosition();
+        return new org.mpg.circos.model.GenomicInterval(endpoint.chromosome(),
+                Math.max(0L, position - halfWidth), Math.min(chromosomeLength, position + halfWidth));
     }
 
     private SectorGeometry requiredSector(Map<String, SectorGeometry> sectors, String chromosome) {

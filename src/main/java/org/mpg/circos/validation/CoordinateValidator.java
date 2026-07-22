@@ -23,8 +23,8 @@ final class CoordinateValidator {
         }
         for (int i = 0; i < plot.links().size(); i++) {
             GenomicLink link = plot.links().get(i);
-            validatePoint(link.source(), "/links/" + i + "/source", assembly, errors);
-            validatePoint(link.target(), "/links/" + i + "/target", assembly, errors);
+            validateEndpoint(link.source(), "/links/" + i + "/source", plot.schemaVersion(), assembly, errors);
+            validateEndpoint(link.target(), "/links/" + i + "/target", plot.schemaVersion(), assembly, errors);
         }
         return errors;
     }
@@ -46,7 +46,10 @@ final class CoordinateValidator {
     }
 
     private LinkEndpoint normalize(LinkEndpoint endpoint, GenomeAssembly assembly) {
-        return new LinkEndpoint(endpoint.segmentId(), normalize(endpoint.chromosome(), assembly), endpoint.position());
+        GenomicInterval interval = endpoint.interval();
+        return new LinkEndpoint(endpoint.segmentId(),
+                new GenomicInterval(normalize(interval.chromosome(), assembly), interval.start(), interval.end()),
+                endpoint.legacyPosition());
     }
 
     private String normalize(String chromosome, GenomeAssembly assembly) {
@@ -65,11 +68,32 @@ final class CoordinateValidator {
                 "end exceeds chromosome length " + chromosome.length()));
     }
 
+    private void validateEndpoint(LinkEndpoint endpoint, String path,
+            org.mpg.circos.model.SchemaVersion version, GenomeAssembly assembly,
+            List<ValidationError> errors) {
+        if (version == org.mpg.circos.model.SchemaVersion.V1_0) {
+            if (!endpoint.isLegacyPoint()) {
+                errors.add(new ValidationError("LINK_ENDPOINT_VERSION_INVALID", path,
+                        "Version 1 links require compatibility point endpoints"));
+                return;
+            }
+            validatePoint(endpoint, path, assembly, errors);
+            return;
+        }
+        if (endpoint.isLegacyPoint()) {
+            errors.add(new ValidationError("LINK_ENDPOINT_VERSION_INVALID", path,
+                    "Version 2 links require genomic interval endpoints"));
+            return;
+        }
+        validateInterval(endpoint.interval(), path + "/interval", assembly, errors);
+    }
+
     private void validatePoint(LinkEndpoint endpoint, String path, GenomeAssembly assembly,
                                List<ValidationError> errors) {
         Chromosome chromosome = chromosome(endpoint.chromosome(), path + "/chromosome", assembly, errors);
         if (chromosome == null) return;
-        if (endpoint.position() < 0 || endpoint.position() >= chromosome.length()) {
+        long position = endpoint.legacyPosition();
+        if (position < 0 || position >= chromosome.length()) {
             errors.add(new ValidationError("coordinate.point.bounds", path + "/position",
                     "position must be in [0," + chromosome.length() + ")"));
         }

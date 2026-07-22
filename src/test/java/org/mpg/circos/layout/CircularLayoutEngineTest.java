@@ -24,4 +24,26 @@ class CircularLayoutEngineTest {
         assertEquals(1, geometry.links().size());
         assertTrue(Double.isFinite(geometry.links().getFirst().ribbon().sourceEndpoint().x()));
     }
+
+    @Test
+    void versionTwoUsesIntervalBoundariesAndMidpointAnchors() {
+        var plot = new CircosApplication().validate(TestFixtures.open("/examples/v2-interval-links.json"));
+        var assembly = new ClasspathAssemblyRepository().load(plot.assemblyId());
+        var geometry = new CircularLayoutEngine().layout(plot, assembly);
+        var ribbon = geometry.links().getFirst().ribbon();
+        var sourceSector = geometry.sectors().stream()
+                .filter(value -> value.chromosome().equals("9")).findFirst().orElseThrow();
+        var targetSector = geometry.sectors().stream()
+                .filter(value -> value.chromosome().equals("22")).findFirst().orElseThrow();
+        var mapper = new AngleMapper();
+
+        assertEquals(mapper.mapBoundary(sourceSector, 133500000), ribbon.sourceStartAngle(), 1e-12);
+        assertEquals(mapper.mapBoundary(sourceSector, 133700000), ribbon.sourceEndAngle(), 1e-12);
+        assertEquals(mapper.mapBoundary(targetSector, 23500000), ribbon.targetStartAngle(), 1e-12);
+        assertEquals(mapper.mapBoundary(targetSector, 23700000), ribbon.targetEndAngle(), 1e-12);
+        var expectedSource = PolarPoint.from(geometry.centerX(), geometry.centerY(), ribbon.radius(),
+                mapper.mapBoundary(sourceSector, 133600000.0));
+        assertEquals(expectedSource.x(), ribbon.sourceEndpoint().x(), 1e-12);
+        assertEquals(expectedSource.y(), ribbon.sourceEndpoint().y(), 1e-12);
+    }
 }

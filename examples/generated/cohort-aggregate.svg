@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="circos-plot-b13709216c27c2f95882da6f" class="circos-plot" data-contract-version="1.0" data-plot-id="synthetic-cohort-1" data-plot-mode="cohort" data-assembly-id="GRCh38" viewBox="0 0 684 684" preserveAspectRatio="xMidYMid meet">
-  <metadata id="circos-metadata-b13709216c27c2f95882da6f">{"sourceResultIds":["result-a","result-b"]}</metadata>
-  <defs id="circos-defs-b13709216c27c2f95882da6f">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="circos-plot-9e4dde8f9d42f16d9f661616" class="circos-plot" data-contract-version="2.0" data-coordinate-convention="ZERO_BASED_HALF_OPEN" data-plot-id="v2-cohort-aggregate" data-plot-mode="cohort" data-assembly-id="GRCh38" viewBox="0 0 684 684" preserveAspectRatio="xMidYMid meet">
+  <metadata id="circos-metadata-9e4dde8f9d42f16d9f661616">{"sourceResultIds":["result-a","result-b"]}</metadata>
+  <defs id="circos-defs-9e4dde8f9d42f16d9f661616">
     <style>.circos-plot{background:#fff;font-family:Arial,sans-serif}.chromosome-sector{stroke:#fff;stroke-width:2}.track-background{fill:#eeeeee;stroke:#fff;stroke-width:1}.circos-event{cursor:pointer;outline:none}.circos-event:focus{stroke:#111;stroke-width:2}.circos-link-endpoint{opacity:.15}.is-selected{stroke:#111;stroke-width:3}.is-related{stroke:#555;stroke-width:2}.is-dimmed{opacity:.18}.chromosome-label{fill:#111;font-size:14px;text-anchor:middle;dominant-baseline:middle}.legend-label{fill:#111;font-size:11px;dominant-baseline:middle}</style>
   </defs>
-  <g id="circos-scene-b13709216c27c2f95882da6f" class="circos-scene">
-    <g id="circos-background-b13709216c27c2f95882da6f" class="circos-background">
+  <g id="circos-scene-9e4dde8f9d42f16d9f661616" class="circos-scene">
+    <g id="circos-background-9e4dde8f9d42f16d9f661616" class="circos-background">
       <rect class="circos-canvas" x="0" y="0" width="684" height="684" fill="#ffffff"/>
     </g>
-    <g id="circos-chromosomes-b13709216c27c2f95882da6f" class="circos-chromosomes">
-      <path id="chromosome-b13709216c27c2f95882da6f-1" class="chromosome-sector" data-chromosome="1" fill="#ed1c24" d="M 342 32 A 310 310 0 0 1 481.597 65.21 L 474.392 79.496 A 294 294 0 0 0 342 48 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-2" class="chromosome-sector" data-chromosome="2" fill="#a93b55" d="M 486.406 67.688 A 310 310 0 0 1 592.159 158.914 L 579.247 168.363 A 294 294 0 0 0 478.953 81.846 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-3" class="chromosome-sector" data-chromosome="3" fill="#6a5f8f" d="M 595.316 163.308 A 310 310 0 0 1 642.945 267.623 L 627.413 271.462 A 294 294 0 0 0 582.242 172.53 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-4" class="chromosome-sector" data-chromosome="4" fill="#2f83b7" d="M 644.198 272.887 A 310 310 0 0 1 649.301 382.82 L 633.44 380.713 A 294 294 0 0 0 628.6 276.454 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-5" class="chromosome-sector" data-chromosome="5" fill="#3aa0a0" d="M 648.541 388.177 A 310 310 0 0 1 615.504 487.931 L 601.387 480.399 A 294 294 0 0 0 632.72 385.794 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-6" class="chromosome-sector" data-chromosome="6" fill="#43a765" d="M 612.915 492.682 A 310 310 0 0 1 551.653 570.354 L 540.832 558.568 A 294 294 0 0 0 598.932 484.905 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-7" class="chromosome-sector" data-chromosome="7" fill="#4caf45" d="M 547.636 573.978 A 310 310 0 0 1 470.185 624.256 L 463.569 609.688 A 294 294 0 0 0 537.022 562.005 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-8" class="chromosome-sector" data-chromosome="8" fill="#6d846f" d="M 465.239 626.45 A 310 310 0 0 1 384.19 649.116 L 382.012 633.265 A 294 294 0 0 0 458.879 611.769 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-9" class="chromosome-sector" data-chromosome="9" fill="#98659a" d="M 378.823 649.805 A 310 310 0 0 1 298.557 648.941 L 300.799 633.099 A 294 294 0 0 0 376.923 633.918 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-10" class="chromosome-sector" data-chromosome="10" fill="#b24e8e" d="M 293.206 648.136 A 310 310 0 0 1 218.687 626.419 L 225.052 611.739 A 294 294 0 0 0 295.725 632.335 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-11" class="chromosome-sector" data-chromosome="11" fill="#cf5f4d" d="M 213.742 624.223 A 310 310 0 0 1 147.071 583.045 L 157.132 570.604 A 294 294 0 0 0 220.362 609.657 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-12" class="chromosome-sector" data-chromosome="12" fill="#f07818" d="M 142.894 579.606 A 310 310 0 0 1 90.287 522.944 L 103.279 513.605 A 294 294 0 0 0 153.17 567.343 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-13" class="chromosome-sector" data-chromosome="13" fill="#ff8a00" d="M 87.168 518.523 A 310 310 0 0 1 55.424 460.211 L 70.215 454.11 A 294 294 0 0 0 100.32 509.412 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-14" class="chromosome-sector" data-chromosome="14" fill="#ffaa00" d="M 53.404 455.192 A 310 310 0 0 1 36.624 395.342 L 52.385 392.589 A 294 294 0 0 0 68.299 449.35 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-15" class="chromosome-sector" data-chromosome="15" fill="#ffe100" d="M 35.739 390.005 A 310 310 0 0 1 32.2 330.878 L 48.189 331.452 A 294 294 0 0 0 51.546 387.527 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-16" class="chromosome-sector" data-chromosome="16" fill="#f4de1f" d="M 32.441 325.473 A 310 310 0 0 1 39.665 273.49 L 55.27 277.026 A 294 294 0 0 0 48.418 326.326 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-17" class="chromosome-sector" data-chromosome="17" fill="#d9aa22" d="M 40.907 268.224 A 310 310 0 0 1 56.051 222.278 L 70.81 228.457 A 294 294 0 0 0 56.447 272.032 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-18" class="chromosome-sector" data-chromosome="18" fill="#b96b26" d="M 58.184 217.306 A 310 310 0 0 1 80.139 176.083 L 93.654 184.646 A 294 294 0 0 0 72.833 223.742 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-19" class="chromosome-sector" data-chromosome="19" fill="#c75c46" d="M 83.074 171.538 A 310 310 0 0 1 103.349 144.147 L 115.666 154.359 A 294 294 0 0 0 96.438 180.336 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-20" class="chromosome-sector" data-chromosome="20" fill="#df6b87" d="M 106.838 140.013 A 310 310 0 0 1 132.919 113.122 L 143.711 124.935 A 294 294 0 0 0 118.976 150.438 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-21" class="chromosome-sector" data-chromosome="21" fill="#ee74b0" d="M 136.946 109.508 A 310 310 0 0 1 158.083 92.452 L 167.575 105.332 A 294 294 0 0 0 147.529 121.507 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-22" class="chromosome-sector" data-chromosome="22" fill="#bd86a8" d="M 162.466 89.28 A 310 310 0 0 1 187.342 73.335 L 195.324 87.202 A 294 294 0 0 0 171.732 102.324 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-X" class="chromosome-sector" data-chromosome="X" fill="#8f8f8f" d="M 192.054 70.677 A 310 310 0 0 1 276.742 38.946 L 280.111 54.588 A 294 294 0 0 0 199.793 84.681 Z"/>
-      <path id="chromosome-b13709216c27c2f95882da6f-Y" class="chromosome-sector" data-chromosome="Y" fill="#ed1c24" d="M 282.041 37.854 A 310 310 0 0 1 314.982 33.18 L 316.376 49.119 A 294 294 0 0 0 285.136 53.552 Z"/>
+    <g id="circos-chromosomes-9e4dde8f9d42f16d9f661616" class="circos-chromosomes">
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-1" class="chromosome-sector" data-chromosome="1" fill="#ed1c24" d="M 342 32 A 310 310 0 0 1 481.597 65.21 L 474.392 79.496 A 294 294 0 0 0 342 48 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-2" class="chromosome-sector" data-chromosome="2" fill="#a93b55" d="M 486.406 67.688 A 310 310 0 0 1 592.159 158.914 L 579.247 168.363 A 294 294 0 0 0 478.953 81.846 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-3" class="chromosome-sector" data-chromosome="3" fill="#6a5f8f" d="M 595.316 163.308 A 310 310 0 0 1 642.945 267.623 L 627.413 271.462 A 294 294 0 0 0 582.242 172.53 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-4" class="chromosome-sector" data-chromosome="4" fill="#2f83b7" d="M 644.198 272.887 A 310 310 0 0 1 649.301 382.82 L 633.44 380.713 A 294 294 0 0 0 628.6 276.454 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-5" class="chromosome-sector" data-chromosome="5" fill="#3aa0a0" d="M 648.541 388.177 A 310 310 0 0 1 615.504 487.931 L 601.387 480.399 A 294 294 0 0 0 632.72 385.794 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-6" class="chromosome-sector" data-chromosome="6" fill="#43a765" d="M 612.915 492.682 A 310 310 0 0 1 551.653 570.354 L 540.832 558.568 A 294 294 0 0 0 598.932 484.905 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-7" class="chromosome-sector" data-chromosome="7" fill="#4caf45" d="M 547.636 573.978 A 310 310 0 0 1 470.185 624.256 L 463.569 609.688 A 294 294 0 0 0 537.022 562.005 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-8" class="chromosome-sector" data-chromosome="8" fill="#6d846f" d="M 465.239 626.45 A 310 310 0 0 1 384.19 649.116 L 382.012 633.265 A 294 294 0 0 0 458.879 611.769 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-9" class="chromosome-sector" data-chromosome="9" fill="#98659a" d="M 378.823 649.805 A 310 310 0 0 1 298.557 648.941 L 300.799 633.099 A 294 294 0 0 0 376.923 633.918 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-10" class="chromosome-sector" data-chromosome="10" fill="#b24e8e" d="M 293.206 648.136 A 310 310 0 0 1 218.687 626.419 L 225.052 611.739 A 294 294 0 0 0 295.725 632.335 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-11" class="chromosome-sector" data-chromosome="11" fill="#cf5f4d" d="M 213.742 624.223 A 310 310 0 0 1 147.071 583.045 L 157.132 570.604 A 294 294 0 0 0 220.362 609.657 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-12" class="chromosome-sector" data-chromosome="12" fill="#f07818" d="M 142.894 579.606 A 310 310 0 0 1 90.287 522.944 L 103.279 513.605 A 294 294 0 0 0 153.17 567.343 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-13" class="chromosome-sector" data-chromosome="13" fill="#ff8a00" d="M 87.168 518.523 A 310 310 0 0 1 55.424 460.211 L 70.215 454.11 A 294 294 0 0 0 100.32 509.412 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-14" class="chromosome-sector" data-chromosome="14" fill="#ffaa00" d="M 53.404 455.192 A 310 310 0 0 1 36.624 395.342 L 52.385 392.589 A 294 294 0 0 0 68.299 449.35 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-15" class="chromosome-sector" data-chromosome="15" fill="#ffe100" d="M 35.739 390.005 A 310 310 0 0 1 32.2 330.878 L 48.189 331.452 A 294 294 0 0 0 51.546 387.527 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-16" class="chromosome-sector" data-chromosome="16" fill="#f4de1f" d="M 32.441 325.473 A 310 310 0 0 1 39.665 273.49 L 55.27 277.026 A 294 294 0 0 0 48.418 326.326 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-17" class="chromosome-sector" data-chromosome="17" fill="#d9aa22" d="M 40.907 268.224 A 310 310 0 0 1 56.051 222.278 L 70.81 228.457 A 294 294 0 0 0 56.447 272.032 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-18" class="chromosome-sector" data-chromosome="18" fill="#b96b26" d="M 58.184 217.306 A 310 310 0 0 1 80.139 176.083 L 93.654 184.646 A 294 294 0 0 0 72.833 223.742 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-19" class="chromosome-sector" data-chromosome="19" fill="#c75c46" d="M 83.074 171.538 A 310 310 0 0 1 103.349 144.147 L 115.666 154.359 A 294 294 0 0 0 96.438 180.336 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-20" class="chromosome-sector" data-chromosome="20" fill="#df6b87" d="M 106.838 140.013 A 310 310 0 0 1 132.919 113.122 L 143.711 124.935 A 294 294 0 0 0 118.976 150.438 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-21" class="chromosome-sector" data-chromosome="21" fill="#ee74b0" d="M 136.946 109.508 A 310 310 0 0 1 158.083 92.452 L 167.575 105.332 A 294 294 0 0 0 147.529 121.507 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-22" class="chromosome-sector" data-chromosome="22" fill="#bd86a8" d="M 162.466 89.28 A 310 310 0 0 1 187.342 73.335 L 195.324 87.202 A 294 294 0 0 0 171.732 102.324 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-X" class="chromosome-sector" data-chromosome="X" fill="#8f8f8f" d="M 192.054 70.677 A 310 310 0 0 1 276.742 38.946 L 280.111 54.588 A 294 294 0 0 0 199.793 84.681 Z"/>
+      <path id="chromosome-9e4dde8f9d42f16d9f661616-Y" class="chromosome-sector" data-chromosome="Y" fill="#ed1c24" d="M 282.041 37.854 A 310 310 0 0 1 314.982 33.18 L 316.376 49.119 A 294 294 0 0 0 285.136 53.552 Z"/>
     </g>
-    <g id="circos-tracks-b13709216c27c2f95882da6f" class="circos-tracks">
-      <g id="track-backgrounds-b13709216c27c2f95882da6f" class="track-backgrounds">
+    <g id="circos-tracks-9e4dde8f9d42f16d9f661616" class="circos-tracks">
+      <g id="track-backgrounds-9e4dde8f9d42f16d9f661616" class="track-backgrounds">
         <path class="track-background" data-background-track="1" data-chromosome="1" d="M 342 56 A 286 286 0 0 1 470.789 86.639 L 466.286 95.568 A 276 276 0 0 0 342 66 Z"/>
         <path class="track-midline" fill="none" stroke="#ffffff" stroke-width="1.8" d="M 342 61 A 281 281 0 0 1 468.538 91.103"/>
         <path class="track-background" data-background-track="1" data-chromosome="2" d="M 475.226 88.925 A 286 286 0 0 1 572.792 173.088 L 564.722 178.994 A 276 276 0 0 0 470.568 97.774 Z"/>
@@ -181,19 +181,19 @@
         <path class="track-background" data-background-track="3" data-chromosome="Y" d="M 293.646 96.721 A 250 250 0 0 1 320.211 92.951 L 321.083 102.913 A 240 240 0 0 0 295.58 106.532 Z"/>
         <path class="track-midline" fill="none" stroke="#ffffff" stroke-width="1.8" d="M 294.613 101.626 A 245 245 0 0 1 320.647 97.932"/>
       </g>
-      <g id="track-gains-b13709216c27c2f95882da6f" class="track track-gains">
+      <g id="track-gains-9e4dde8f9d42f16d9f661616" class="track track-gains">
       </g>
-      <g id="track-losses-b13709216c27c2f95882da6f" class="track track-losses">
+      <g id="track-losses-9e4dde8f9d42f16d9f661616" class="track track-losses">
       </g>
     </g>
-    <g id="circos-links-b13709216c27c2f95882da6f" class="circos-links">
-      <g id="link-b13709216c27c2f95882da6f-e82d13fa20c21b23a3c5312c" class="circos-event circos-link event-translocation" tabindex="0" role="button" data-link-id="aggregate-9-22" data-event-group-id="cohort-9-22" data-source-segment-id="aggregate-source" data-target-segment-id="aggregate-target" data-event-type="translocation" data-source-chromosome="9" data-source-position="66858500" data-target-chromosome="22" data-target-position="11609500" data-source-genes="[&quot;ABL1&quot;]" data-target-genes="[&quot;BCR&quot;]" data-methods="[&quot;Karyotype&quot;,&quot;FISH&quot;]" data-aggregate-id="aggregate-9-22" data-aggregate-event-count="6" data-aggregate-patient-count="3" data-aggregate-sample-count="4" data-grouping-description="Exact breakpoints" data-confidence-distribution="[{&quot;label&quot;:&quot;High&quot;,&quot;count&quot;:4},{&quot;label&quot;:&quot;Medium&quot;,&quot;count&quot;:2}]">
-        <path class="circos-link-ribbon" fill="#71dfc0" stroke="#71dfc0" fill-opacity="0.79" stroke-opacity="0.87" d="M 341.58 566 C 341.853 420.4 297.706 277.311 215.447 157.175 L 217.116 156.043 C 298.291 276.915 341.147 420.395 339.562 565.987 Z"/>
+    <g id="circos-links-9e4dde8f9d42f16d9f661616" class="circos-links">
+      <g id="link-9e4dde8f9d42f16d9f661616-e82d13fa20c21b23a3c5312c" class="circos-event circos-link event-translocation" tabindex="0" role="button" data-link-id="aggregate-9-22" data-event-group-id="cohort-9-22" data-source-segment-id="aggregate-source" data-target-segment-id="aggregate-target" data-event-type="translocation" data-source-chromosome="9" data-source-start="66000000" data-source-end="67717000" data-source-anchor="66858500" data-target-chromosome="22" data-target-start="11000000" data-target-end="12219000" data-target-anchor="11609500" data-attachment-policy="midpoint" data-source-genes="[&quot;ABL1&quot;]" data-target-genes="[&quot;BCR&quot;]" data-methods="[&quot;Karyotype&quot;,&quot;FISH&quot;]" data-aggregate-id="aggregate-9-22" data-aggregate-event-count="6" data-aggregate-patient-count="3" data-aggregate-sample-count="4" data-grouping-description="Exact genomic intervals" data-confidence-distribution="[{&quot;label&quot;:&quot;High&quot;,&quot;count&quot;:4},{&quot;label&quot;:&quot;Medium&quot;,&quot;count&quot;:2}]">
+        <path class="circos-link-ribbon" fill="#71dfc0" stroke="#71dfc0" fill-opacity="0.79" stroke-opacity="0.87" d="M 340.932 565.997 C 341.626 420.399 297.924 277.163 216.068 156.751 L 216.492 156.463 C 298.072 277.062 341.374 420.397 340.21 565.993 Z"/>
         <circle class="circos-link-endpoint endpoint-source" aria-hidden="true" fill="#71dfc0" cx="340.571" cy="565.995" r="3"/>
         <circle class="circos-link-endpoint endpoint-target" aria-hidden="true" fill="#71dfc0" cx="216.28" cy="156.607" r="3"/>
       </g>
     </g>
-    <g id="circos-labels-b13709216c27c2f95882da6f" class="circos-labels">
+    <g id="circos-labels-9e4dde8f9d42f16d9f661616" class="circos-labels">
       <text class="chromosome-label" data-chromosome="1" x="416.755" y="27.77">1</text>
       <text class="chromosome-label" data-chromosome="2" x="552.978" y="97.424">2</text>
       <text class="chromosome-label" data-chromosome="3" x="635.822" y="207.844">3</text>
@@ -219,7 +219,7 @@
       <text class="chromosome-label" data-chromosome="X" x="228.674" y="39.533">X</text>
       <text class="chromosome-label" data-chromosome="Y" x="296.622" y="22.203">Y</text>
     </g>
-    <g id="circos-legend-b13709216c27c2f95882da6f" class="circos-legend">
+    <g id="circos-legend-9e4dde8f9d42f16d9f661616" class="circos-legend">
       <rect x="16" y="634" width="12" height="12" fill="#d7191c" fill-opacity="0.88"/><text class="legend-label" x="34" y="640">Gain / Duplication / Amplification</text>
       <rect x="16" y="652" width="12" height="12" fill="#2c7bb6" fill-opacity="0.88"/><text class="legend-label" x="34" y="658">Loss / Deletion</text>
       <rect x="16" y="670" width="12" height="12" fill="#71dfc0" fill-opacity="0.88"/><text class="legend-label" x="34" y="676">Translocation</text>

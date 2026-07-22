@@ -1,22 +1,61 @@
 # Technical design: Java semantic Circos renderer
 
-Status: **Implemented and feature-frozen** · Contract version: **JSON Schema 1.0** ·
+Status: **Version 2 implemented; Version 1 compatibility retained** · Contract versions: **JSON Schema 1.0 and 2.0** ·
 Target runtime: **Java 21** · Build system: **Maven**
 
-This document is the authoritative, standalone Version 1 specification for the
-Circos component. A developer must be able to maintain and
+This document contains the historical Version 1 baseline and the preferred
+Version 2 interval-link contract. A developer must be able to maintain and
 test the repository using this document and repository-owned fixtures/resources
 alone; access to the MPG repository, its audit, database, R template, or stored
 outputs is not required. This specification records all normative legacy-parity
 behavior retained by V1 while establishing safer coordinates, explicit
 missing-value behavior, and stable semantic SVG.
 
-The renderer/viewer feature set described here is frozen for Version 1. Changes
-are limited to correctness, security, accessibility, deterministic-output, and
-integration-blocking fixes that preserve the JSON, Java, semantic SVG, and
-viewer callback contracts. New visual tracks, viewer controls, clinical-data
-behavior, or integration mechanisms require separate approval and a later
-versioned design.
+Version 1 remains a strict compatibility input with point endpoints. Version 2
+is the preferred contract. It changes translocation endpoints to affected
+genomic intervals while preserving the same three visualization categories.
+No database or application integration behavior is part of either version.
+
+## Version 2 interval-link contract
+
+The caller decides which biological records should be visualized. The renderer
+never queries a database and does not classify database-specific event aliases.
+Its public visualization categories remain exactly `GAIN`, `LOSS`, and
+`TRANSLOCATION`: gains and losses are interval track objects; a translocation is
+a link between two affected genomic intervals.
+
+Version 2 link endpoints have this JSON shape:
+
+```json
+"source": {
+  "segmentId": "region-9",
+  "interval": {"chromosome": "9", "start": 133500000, "end": 133700000}
+}
+```
+
+`source.interval` and `target.interval` are required zero-based, half-open
+intervals satisfying `0 <= start < end <= chromosome length`. Both chromosomes
+are normalized and checked against the plot's root assembly. A V2 link must have
+`eventType: "translocation"`; segments accept only `gain` or `loss`.
+
+The ribbon attaches across each supplied interval. Its default marker/anchor is
+the interval midpoint, calculated as `start + (end - start) / 2.0`. That anchor
+is approximate display geometry, not an exact or confirmed breakpoint. Semantic
+SVG 2.0 exposes each endpoint's chromosome, start, end, midpoint anchor, and
+`data-attachment-policy="midpoint"`.
+
+Version 1 JSON remains strict and point-based. Parsing marks those points as
+legacy compatibility endpoints and supplies a one-base internal compatibility
+interval without claiming it is a caller-supplied biological interval. The V1
+layout retains its historical synthetic ribbon width. New Java callers and all
+new examples should use interval endpoints and Schema Version 2.0.
+
+Typed display fields remain authoritative: event label, genes, copy number,
+confidence, aggregate event/patient/sample counts, methods, and aggregation
+description. Annotation objects additionally accept an ordered, immutable
+`additionalMetadata` string map. The viewer presents these values as escaped
+text and uses **Linked genomic regions** and **Aggregation: Exact genomic
+intervals** terminology.
 
 ## 1. Scope and design principles
 

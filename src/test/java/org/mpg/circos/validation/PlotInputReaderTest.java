@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PlotInputReaderTest {
@@ -29,6 +30,34 @@ class PlotInputReaderTest {
             assertEquals("Exact breakpoints", link.aggregate().groupingDescription());
             assertEquals("High", link.aggregate().confidenceDistribution().get(0).label());
             assertEquals(4, link.aggregate().confidenceDistribution().get(0).count());
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    void parsesVersionTwoIntervalEndpointsAndDisplayMetadata() {
+        try (var input = getClass().getResourceAsStream("/examples/v2-interval-links.json")) {
+            var plot = reader.read(input);
+            var endpoint = plot.links().getFirst().source();
+            assertEquals(org.mpg.circos.model.SchemaVersion.V2_0, plot.schemaVersion());
+            assertEquals(new org.mpg.circos.model.GenomicInterval("9", 133500000, 133700000),
+                    endpoint.interval());
+            assertFalse(endpoint.isLegacyPoint());
+            assertEquals("Confirmed", plot.links().getFirst().annotations()
+                    .additionalMetadata().get("Review status"));
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    void retainsExplicitVersionOnePointCompatibility() {
+        try (var input = getClass().getResourceAsStream("/examples/crossing-links.json")) {
+            var endpoint = reader.read(input).links().getFirst().source();
+            assertEquals(133599999L, endpoint.legacyPosition());
+            assertEquals(new org.mpg.circos.model.GenomicInterval("9", 133599999, 133600000),
+                    endpoint.interval());
         } catch (Exception e) {
             throw new AssertionError(e);
         }

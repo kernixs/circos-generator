@@ -33,7 +33,7 @@ class CircosViewerDomTest {
             HtmlPage links = page(browser, "/examples/crossing-links.json");
             hover(links, ".circos-link");
             assertTrue(tooltip(links).contains(
-                    "Event type: Translocation\nBreakpoints: chr9:133,600,000 ↔ chr22:23,600,000"));
+                    "Event type: Translocation\nLinked genomic regions: chr9:133,600,000 ↔ chr22:23,600,000"));
             assertTrue(tooltip(links).contains("Genes: ABL1 ↔ BCR\nMethod: Karyotype\nConfidence: HIGH"));
             assertEquals("0", script(links, "String(window.selectionDetails.length)"));
         }
@@ -87,6 +87,28 @@ class CircosViewerDomTest {
     }
 
     @Test
+    void versionTwoTooltipDisplaysIntervalsMidpointPolicyAndStructuredMetadata() throws Exception {
+        try (WebClient browser = browser()) {
+            HtmlPage page = page(browser, "/examples/v2-interval-links.json");
+            hover(page, "[data-link-id='link-a']");
+
+            String tooltip = tooltip(page);
+            assertTrue(tooltip.contains("Linked genomic regions: chr9:133,500,001–133,700,000"
+                    + " ↔ chr22:23,500,001–23,700,000"));
+            assertTrue(tooltip.contains("Event label: ABL1–BCR linked regions"));
+            assertTrue(tooltip.contains("Attachment: Approximate interval midpoint"));
+            assertTrue(tooltip.contains("Review status: Confirmed"));
+            assertTrue(tooltip.contains("Source: Caller supplied"));
+            assertFalse(tooltip.contains("Breakpoints"));
+
+            click(page, "[data-link-id='link-a']");
+            assertEquals("link-a", script(page, "window.selectionDetails[0].linkIds[0]"));
+            assertEquals("true", script(page,
+                    "document.querySelector('[data-link-id=\\'link-a\\']').getAttribute('aria-pressed')"));
+        }
+    }
+
+    @Test
     void cohortSegmentAndLinkTooltipsUseSuppliedCountsWithoutAveraging() throws Exception {
         try (WebClient browser = browser()) {
             HtmlPage segments = page(browser, "/examples/cohort-single-result.json");
@@ -94,7 +116,7 @@ class CircosViewerDomTest {
             String gain = tooltip(segments);
             assertTrue(gain.contains("Events: 1\nSamples: 1\nPatients: 1"));
             assertTrue(gain.contains("Methods: Microarray, WGS"));
-            assertTrue(gain.contains("Grouped by: Exact interval"));
+            assertTrue(gain.contains("Aggregation: Exact interval"));
             assertTrue(gain.contains("Confidence: High 1"));
 
             hover(segments, "[data-segment-id='cohort-loss-1']");
@@ -103,12 +125,12 @@ class CircosViewerDomTest {
             assertTrue(loss.contains("Method: WGS"));
             assertTrue(loss.contains("Confidence: High 1, Low 1"));
 
-            HtmlPage links = page(browser, "/examples/cohort-aggregate.json");
+            HtmlPage links = page(browser, "/examples/v2-cohort-aggregate.json");
             hover(links, "[data-link-id='aggregate-9-22']");
             String link = tooltip(links);
-            assertTrue(link.contains("chr9:66,858,501 ↔ chr22:11,609,501"));
+            assertTrue(link.contains("chr9:66,000,001–67,717,000 ↔ chr22:11,000,001–12,219,000"));
             assertTrue(link.contains("Events: 6\nSamples: 4\nPatients: 3"));
-            assertTrue(link.contains("Grouped by: Exact breakpoints"));
+            assertTrue(link.contains("Aggregation: Exact genomic intervals"));
             assertFalse(link.toLowerCase().contains("average"));
         }
     }

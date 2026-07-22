@@ -2,9 +2,69 @@ package org.mpg.circos.model;
 
 import java.util.Objects;
 
-public record LinkEndpoint(String segmentId, String chromosome, long position) {
+/**
+ * One end of a genomic link. Interval endpoints are the preferred V2 contract.
+ * A legacy point marker is retained only for explicit Version 1 compatibility.
+ */
+public record LinkEndpoint(String segmentId, GenomicInterval interval, Long legacyPosition) {
     public LinkEndpoint {
         Objects.requireNonNull(segmentId, "segmentId");
-        Objects.requireNonNull(chromosome, "chromosome");
+        Objects.requireNonNull(interval, "interval");
+        if (legacyPosition != null) {
+            if (legacyPosition == Long.MAX_VALUE) {
+                throw new IllegalArgumentException("Legacy point must be less than Long.MAX_VALUE");
+            }
+            if (interval.start() != legacyPosition || interval.end() != legacyPosition + 1) {
+                throw new IllegalArgumentException(
+                        "Legacy point interval must be exactly [legacyPosition, legacyPosition + 1)");
+            }
+        }
+    }
+
+    public LinkEndpoint(String segmentId, GenomicInterval interval) {
+        this(segmentId, interval, null);
+    }
+
+    /**
+     * Compatibility constructor for existing point-based callers. New code should
+     * construct an endpoint with a caller-supplied genomic interval.
+     */
+    @Deprecated(forRemoval = false)
+    public LinkEndpoint(String segmentId, String chromosome, long position) {
+        this(segmentId, compatibilityInterval(chromosome, position), position);
+    }
+
+    public static LinkEndpoint fromLegacyPoint(String segmentId, String chromosome, long position) {
+        return new LinkEndpoint(segmentId, compatibilityInterval(chromosome, position), position);
+    }
+
+    public String chromosome() {
+        return interval.chromosome();
+    }
+
+    public boolean isLegacyPoint() {
+        return legacyPosition != null;
+    }
+
+    public double midpoint() {
+        return interval.start() + (interval.end() - interval.start()) / 2.0;
+    }
+
+    /**
+     * Returns the original V1 point. This is not defined for interval endpoints.
+     */
+    @Deprecated(forRemoval = false)
+    public long position() {
+        if (legacyPosition == null) {
+            throw new IllegalStateException("Interval endpoints do not have an exact point position");
+        }
+        return legacyPosition;
+    }
+
+    private static GenomicInterval compatibilityInterval(String chromosome, long position) {
+        if (position == Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Legacy point must be less than Long.MAX_VALUE");
+        }
+        return new GenomicInterval(chromosome, position, position + 1);
     }
 }
