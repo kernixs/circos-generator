@@ -44,6 +44,18 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>viewer</directory>
+        <includes>
+          <include>circos-viewer.js</include>
+        </includes>
+        <targetPath>org/mpg/circos/viewer</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
