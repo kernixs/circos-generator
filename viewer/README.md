@@ -31,6 +31,10 @@ Maven consumers can load the exact packaged script and required styles with
 - `load(container, url)` asynchronously fetches, inserts, and enhances a
   generated SVG.
 
+These APIs accept only trusted semantic SVG produced by `circos-generator`.
+They do not sanitize arbitrary or user-supplied SVG; hosts that accept untrusted
+SVG must sanitize it before calling `attach()`, `mount()`, or `load()`.
+
 `attach()` and `mount()` return a container-scoped controller immediately.
 `load()` returns a `Promise` that resolves to the same controller after the SVG
 has been fetched and mounted. Callers must await or chain that promise before
