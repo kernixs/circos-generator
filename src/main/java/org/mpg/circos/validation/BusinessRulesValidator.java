@@ -13,8 +13,7 @@ import java.util.List;
 final class BusinessRulesValidator {
     List<ValidationError> validate(CircosPlot plot) {
         List<ValidationError> errors = new ArrayList<>();
-        if (plot.schemaVersion() == SchemaVersion.V1_0
-                && AssemblyId.from(plot.assemblyId()) == AssemblyId.T2T_CHM13) {
+        if (plot.schemaVersion() == SchemaVersion.V1_0 && isT2t(plot.assemblyId())) {
             errors.add(new ValidationError("ASSEMBLY_VERSION_INVALID", "/assemblyId",
                     "T2T-CHM13v2.0 requires Schema Version 2.0"));
         }
@@ -77,6 +76,14 @@ final class BusinessRulesValidator {
             }
         }
         return errors;
+    }
+
+    private boolean isT2t(String assemblyId) {
+        try {
+            return AssemblyId.from(assemblyId) == AssemblyId.T2T_CHM13;
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
     }
 
     private void validateAggregate(org.mpg.circos.model.CohortAggregate aggregate, String path,

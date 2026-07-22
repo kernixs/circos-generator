@@ -29,6 +29,16 @@ class BusinessRulesValidatorTest {
     }
 
     @Test
+    void unsupportedTypedAssemblyDoesNotEscapeBusinessRulesValidation() {
+        CircosApplication application = new CircosApplication();
+        CircosPlot valid = application.validate(TestFixtures.open("/examples/gains-and-losses.json"));
+        CircosPlot invalid = new CircosPlot(valid.schemaVersion(), valid.plotId(), valid.label(), valid.mode(),
+                "custom", valid.coordinateConvention(), valid.sourceResultIds(), valid.segments(), valid.links());
+
+        assertDoesNotThrow(() -> new BusinessRulesValidator().validate(invalid));
+    }
+
+    @Test
     void acceptsCohortWithOneRepresentedSourceResult() {
         assertDoesNotThrow(() -> new CircosApplication()
                 .readAndValidate(TestFixtures.open("/examples/cohort-single-result.json")));
