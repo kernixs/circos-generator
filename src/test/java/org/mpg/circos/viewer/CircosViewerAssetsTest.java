@@ -13,5 +13,8 @@ class CircosViewerAssetsTest {
         assertTrue(javascript.contains("global.CircosViewer"));
         assertTrue(javascript.contains("circos-selection-change"));
         assertEquals(javascript, CircosViewerAssets.javascript());
+        String stylesheet = CircosViewerAssets.stylesheet();
+        assertTrue(stylesheet.contains(".circos-link.is-selected > .circos-link-endpoint"));
+        assertTrue(stylesheet.contains(".circos-event.is-dimmed"));
     }
 }

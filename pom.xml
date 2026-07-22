@@ -52,6 +52,7 @@
         <directory>viewer</directory>
         <includes>
           <include>circos-viewer.js</include>
+          <include>circos-viewer.css</include>
         </includes>
         <targetPath>org/mpg/circos/viewer</targetPath>
       </resource>
