@@ -22,6 +22,12 @@ class BusinessRulesValidatorTest {
     }
 
     @Test
+    void acceptsGainWithExplicitlyUnknownCopyNumber() {
+        assertDoesNotThrow(() -> new CircosApplication()
+                .readAndValidate(TestFixtures.open("/examples/gain-unknown-copy-number.json")));
+    }
+
+    @Test
     void rejectsTranslocationSegmentFromDirectJavaApi() {
         CircosApplication application = new CircosApplication();
         CircosPlot valid = application.validate(TestFixtures.open("/examples/gains-and-losses.json"));
@@ -90,7 +96,6 @@ class BusinessRulesValidatorTest {
                 Arguments.of("/fixtures/invalid/patient-with-aggregate.json"),
                 Arguments.of("/fixtures/invalid/cohort-without-aggregate.json"),
                 Arguments.of("/fixtures/invalid/inconsistent-aggregate-counts.json"),
-                Arguments.of("/fixtures/invalid/gain-null-copy-number.json"),
                 Arguments.of("/fixtures/invalid/gain-copy-number-below-three.json"));
     }
 }

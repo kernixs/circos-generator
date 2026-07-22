@@ -464,14 +464,14 @@ versioned contract revision and separate approval.
 | `aggregate` | cohort aggregate object | no | A | Optional caller-defined aggregate metadata for cohort segments; forbidden in patient mode |
 | `label` | string | no | I | Tooltip/display metadata |
 
-V1 defines copy number as absolute integer copy number. For `gain`,
-`copyNumber` must be non-null and at least 3. Values below 3 are rejected with a
-domain-validation error; the renderer never reclassifies them or silently
-reverses radial bounds. For `loss`, copy number may be null because its visual
-appearance does not use the value. Unknown copy number never implies loss or
-numeric zero. A future caller using relative/log-ratio copy number requires a
-new documented contract convention rather than weakening this rule. Confidence
-is a bounded, display-safe
+Copy number is an optional absolute integer measurement. For `gain`, a known
+`copyNumber` must be at least 3; an explicitly unknown value is `null`. Values
+below 3 are rejected with a domain-validation error, and the renderer never
+reclassifies them or silently reverses radial bounds. For `loss`, copy number
+may also be null because visual geometry does not use the value. Unknown copy
+number never implies loss, numeric zero, or an inferred gain value. A future
+caller using relative/log-ratio copy number requires a new documented contract
+convention. Confidence is a bounded, display-safe
 opaque category rather than an invented numeric score; V1 preserves values such
 as `HIGH` and `MEDIUM` without assigning them an ordering.
 

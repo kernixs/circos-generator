@@ -56,9 +56,10 @@ final class BusinessRulesValidator {
                         "segment eventType must be gain or loss"));
                 continue;
             }
-            if (segment.eventType() == EventType.GAIN && (segment.copyNumber() == null || segment.copyNumber() < 3)) {
+            if (segment.eventType() == EventType.GAIN
+                    && segment.copyNumber() != null && segment.copyNumber() < 3) {
                 errors.add(new ValidationError("GAIN_COPY_NUMBER_INVALID", "/segments/" + i + "/copyNumber",
-                        "absolute gain copyNumber must be at least 3"));
+                        "known absolute gain copyNumber must be at least 3"));
             }
             if (segment.displayType() != null && segment.displayType().geometryType() != segment.eventType()) {
                 errors.add(new ValidationError("SEGMENT_DISPLAY_TYPE_INVALID", "/segments/" + i + "/displayType",
