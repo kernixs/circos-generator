@@ -48,6 +48,7 @@ class SemanticSvgRendererTest {
         assertEquals("133600000", link.getAttribute("data-source-anchor"));
         assertEquals("23500000", link.getAttribute("data-target-start"));
         assertEquals("23700000", link.getAttribute("data-target-end"));
+        assertEquals("23600000", link.getAttribute("data-target-anchor"));
         assertEquals("midpoint", link.getAttribute("data-attachment-policy"));
         assertFalse(link.hasAttribute("data-source-position"));
         assertEquals("{\"Review status\":\"Confirmed\",\"Source\":\"Caller supplied\"}",

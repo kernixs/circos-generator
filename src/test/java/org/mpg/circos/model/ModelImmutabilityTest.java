@@ -32,6 +32,22 @@ class ModelImmutabilityTest {
     }
 
     @Test
+    void rejectsInconsistentLegacyPointRepresentation() {
+        assertThrows(IllegalArgumentException.class, () -> new LinkEndpoint("legacy",
+                new GenomicInterval("1", 98, 100), 99L));
+        assertThrows(IllegalArgumentException.class, () -> new LinkEndpoint("legacy",
+                new GenomicInterval("1", 99, 101), 99L));
+    }
+
+    @Test
+    void rejectsMaximumLongLegacyPoint() {
+        assertThrows(IllegalArgumentException.class,
+                () -> LinkEndpoint.fromLegacyPoint("legacy", "1", Long.MAX_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> new LinkEndpoint("legacy",
+                new GenomicInterval("1", Long.MAX_VALUE, Long.MAX_VALUE), Long.MAX_VALUE));
+    }
+
+    @Test
     void tooltipMetadataCopiesInputCollections() {
         List<String> genes = new ArrayList<>(List.of("EGFR"));
         var metadata = new LinkedHashMap<String, String>();

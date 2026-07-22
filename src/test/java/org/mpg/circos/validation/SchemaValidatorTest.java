@@ -23,6 +23,27 @@ class SchemaValidatorTest {
     }
 
     @Test
+    void versionTwoRequiresExplicitCoordinateConvention() throws Exception {
+        var node = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(
+                getClass().getResourceAsStream("/examples/v2-interval-links.json"));
+        node.remove("coordinateConvention");
+        assertFalse(validator.validate(node).isEmpty());
+    }
+
+    @Test
+    void versionTwoSchemaRejectsNegativeIntervalCoordinates() throws Exception {
+        var node = mapper.readTree(getClass().getResourceAsStream("/examples/v2-interval-links.json"));
+        ((com.fasterxml.jackson.databind.node.ObjectNode) node.at("/links/0/source/interval"))
+                .put("start", -1);
+        assertFalse(validator.validate(node).isEmpty());
+
+        node = mapper.readTree(getClass().getResourceAsStream("/examples/v2-interval-links.json"));
+        ((com.fasterxml.jackson.databind.node.ObjectNode) node.at("/links/0/source/interval"))
+                .put("end", -1);
+        assertFalse(validator.validate(node).isEmpty());
+    }
+
+    @Test
     void versionTwoRejectsLegacyPointEndpoints() throws Exception {
         var node = mapper.readTree(getClass().getResourceAsStream("/examples/v2-interval-links.json"));
         var source = (com.fasterxml.jackson.databind.node.ObjectNode) node.at("/links/0/source");

@@ -10,6 +10,15 @@ public record LinkEndpoint(String segmentId, GenomicInterval interval, Long lega
     public LinkEndpoint {
         Objects.requireNonNull(segmentId, "segmentId");
         Objects.requireNonNull(interval, "interval");
+        if (legacyPosition != null) {
+            if (legacyPosition == Long.MAX_VALUE) {
+                throw new IllegalArgumentException("Legacy point must be less than Long.MAX_VALUE");
+            }
+            if (interval.start() != legacyPosition || interval.end() != legacyPosition + 1) {
+                throw new IllegalArgumentException(
+                        "Legacy point interval must be exactly [legacyPosition, legacyPosition + 1)");
+            }
+        }
     }
 
     public LinkEndpoint(String segmentId, GenomicInterval interval) {
@@ -53,7 +62,9 @@ public record LinkEndpoint(String segmentId, GenomicInterval interval, Long lega
     }
 
     private static GenomicInterval compatibilityInterval(String chromosome, long position) {
-        long end = position == Long.MAX_VALUE ? Long.MAX_VALUE : position + 1;
-        return new GenomicInterval(chromosome, position, end);
+        if (position == Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Legacy point must be less than Long.MAX_VALUE");
+        }
+        return new GenomicInterval(chromosome, position, position + 1);
     }
 }
