@@ -23,6 +23,16 @@ class SchemaValidatorTest {
     }
 
     @Test
+    void versionTwoAcceptsT2tChm13Aliases() throws Exception {
+        for (String assemblyId : java.util.List.of("T2T-CHM13", "T2T", "CHM13v2.0", "hs1")) {
+            var node = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(
+                    getClass().getResourceAsStream("/examples/v2-interval-links.json"));
+            node.put("assemblyId", assemblyId);
+            assertTrue(validator.validate(node).isEmpty(), assemblyId);
+        }
+    }
+
+    @Test
     void versionTwoRequiresExplicitCoordinateConvention() throws Exception {
         var node = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(
                 getClass().getResourceAsStream("/examples/v2-interval-links.json"));

@@ -74,7 +74,7 @@ is deliberately undecided and cannot change the rendering contract.
 
 Visual compatibility targets are:
 
-- GRCh37/hg19 and GRCh38/hg38; chromosomes 1-22, X, and Y;
+- GRCh37/hg19, GRCh38/hg38, and T2T-CHM13v2.0/hs1; chromosomes 1-22, X, and Y;
 - proportional, clockwise sectors starting at 90 degrees;
 - one-degree inter-sector gaps and the specified larger closing gap;
 - the chromosome colors and labels specified in section 6;
@@ -597,6 +597,12 @@ chosen zero-based contract; every future caller or adapter must establish its
 actual source convention rather than infer it from examples.
 
 ## 5. Coordinate convention and assembly validation
+
+T2T input uses canonical assembly ID `T2T-CHM13` and is pinned to the
+T2T-CHM13v2.0 RefSeq assembly `GCF_009914755.1` (UCSC `hs1`). Its 24 primary
+chromosome lengths come from the NCBI Datasets assembled-molecule sequence
+report for that accession; mitochondrial and non-primary sequences are outside
+the supported chromosome scope.
 
 `CoordinateConvention.ZERO_BASED_HALF_OPEN` is the only supported Phase 1
 convention. It uses **zero-based, half-open** coordinates: `[start, end)`. This is

@@ -1,0 +1,33 @@
+{
+  "assemblyId": "T2T-CHM13",
+  "assemblyName": "T2T-CHM13v2.0",
+  "refSeqAccession": "GCF_009914755.1",
+  "ucscName": "hs1",
+  "source": "NCBI Datasets assembled-molecule sequence report for GCF_009914755.1, verified 2026-07-22",
+  "chromosomes": [
+    {"name":"1","length":248387328,"aliases":["chr1"]},
+    {"name":"2","length":242696752,"aliases":["chr2"]},
+    {"name":"3","length":201105948,"aliases":["chr3"]},
+    {"name":"4","length":193574945,"aliases":["chr4"]},
+    {"name":"5","length":182045439,"aliases":["chr5"]},
+    {"name":"6","length":172126628,"aliases":["chr6"]},
+    {"name":"7","length":160567428,"aliases":["chr7"]},
+    {"name":"8","length":146259331,"aliases":["chr8"]},
+    {"name":"9","length":150617247,"aliases":["chr9"]},
+    {"name":"10","length":134758134,"aliases":["chr10"]},
+    {"name":"11","length":135127769,"aliases":["chr11"]},
+    {"name":"12","length":133324548,"aliases":["chr12"]},
+    {"name":"13","length":113566686,"aliases":["chr13"]},
+    {"name":"14","length":101161492,"aliases":["chr14"]},
+    {"name":"15","length":99753195,"aliases":["chr15"]},
+    {"name":"16","length":96330374,"aliases":["chr16"]},
+    {"name":"17","length":84276897,"aliases":["chr17"]},
+    {"name":"18","length":80542538,"aliases":["chr18"]},
+    {"name":"19","length":61707364,"aliases":["chr19"]},
+    {"name":"20","length":66210255,"aliases":["chr20"]},
+    {"name":"21","length":45090682,"aliases":["chr21"]},
+    {"name":"22","length":51324926,"aliases":["chr22"]},
+    {"name":"X","length":154259566,"aliases":["chrX"]},
+    {"name":"Y","length":62460029,"aliases":["chrY"]}
+  ]
+}
