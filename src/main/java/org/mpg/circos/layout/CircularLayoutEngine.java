@@ -96,7 +96,10 @@ public final class CircularLayoutEngine {
             }
             AnnularPath interval = new AnnularPath(ring.innerRadius(), outer, start, end);
             double markerRadius = segment.eventType() == EventType.GAIN
-                    ? ring.outerRadius() - 1.5 : ring.innerRadius() + 0.72 * (ring.outerRadius() - ring.innerRadius());
+                    ? segment.copyNumber() == null
+                            ? ring.innerRadius() + 0.375
+                            : ring.outerRadius() - 1.5
+                    : ring.innerRadius() + 0.72 * (ring.outerRadius() - ring.innerRadius());
             PolarPoint marker = PolarPoint.from(parameters.center(), parameters.center(), markerRadius,
                     start + (end - start) / 2.0);
             result.add(new PlotGeometry.SegmentGeometry(segment.id(), interval, marker));

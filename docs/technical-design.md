@@ -87,8 +87,8 @@ Visual compatibility targets are:
 The compatibility constants and formulas recorded in section 6 are normative.
 They will be represented as named, immutable rendering parameters and locked by
 deterministic structural and golden SVG tests maintained in this repository.
-Invalid coordinates, semantic identity, missing copy number, escaping, and
-explicit cohort aggregation intentionally supersede legacy behavior. If a
+Invalid coordinates, semantic identity, explicit unknown copy number, escaping,
+and explicit cohort aggregation intentionally supersede legacy behavior. If a
 future external reference conflicts with this document, this document controls
 until it is revised and approved.
 
@@ -599,7 +599,10 @@ actual source convention rather than infer it from examples.
 ## 5. Coordinate convention and assembly validation
 
 T2T input uses canonical assembly ID `T2T-CHM13` and is pinned to the
-T2T-CHM13v2.0 RefSeq assembly `GCF_009914755.1` (UCSC `hs1`). Its 24 primary
+T2T-CHM13v2.0 RefSeq assembly `GCF_009914755.1` (UCSC `hs1`). For compatibility
+with MPG normalization, `T2T`, `CHM13`, `CHM13v2`, and `CHM13v2.0` are defined
+by this API to mean that exact v2.0 assembly; other versions are not inferred.
+Its 24 primary
 chromosome lengths come from the NCBI Datasets assembled-molecule sequence
 report for that accession; mitochondrial and non-primary sequences are outside
 the supported chromosome scope.
@@ -670,11 +673,12 @@ height `0.085`, fill `#eeeeee`, a white border, and a white midline at `y=0.5`
 with line width 1.8.
 
 The gain track exists only when gain segments exist. It has y-range `[0,6]`,
-height `0.095`, gray background, and white border. Domain validation guarantees
-absolute integer copy number `v >= 3`. Its red `#d7191c` interval rectangle
-uses bottom `y=3.2` and top `y=max(3.2,min(5.8,v))`; this explicit V1 floor
-prevents reversed geometry for `v=3`. Its filled-circle marker is at
-`y=min(5.7,v+1.2)`, size 0.35. Null and values below 3 fail domain validation.
+height `0.095`, gray background, and white border. A known absolute integer copy
+number must satisfy `v >= 3`. Its red `#d7191c` interval rectangle uses bottom
+`y=3.2` and top `y=max(3.2,min(5.8,v))`; this explicit floor prevents reversed
+geometry for `v=3`. A null value renders only the minimum visible interval and a
+co-located baseline marker, without fabricating numeric metadata or placing the
+marker at the known-value position. Known values below 3 fail domain validation.
 
 The loss track exists only when loss segments exist. It has y-range `[0,3]`,
 height `0.095`, gray background, and white border. Its blue `#2c7bb6` interval
@@ -955,9 +959,9 @@ test lifecycle.
   patient/cohort aggregate placement;
 - require exactly one represented source result in patient mode and one or more
   in cohort mode, including a cohort-search fixture with one represented result;
-- verify null copy number remains null and is valid only for allowed event
-  types; reject omitted copy number, null gain values, non-integral values, and
-  every gain value below the absolute-copy-number minimum of 3;
+- verify null copy number remains null for gain and loss, renders with no
+  fabricated numeric metadata, and reject omitted copy number, non-integral
+  values, and every known gain value below the absolute-copy-number minimum of 3;
 - accept empty arrays/categories without exceptions or fabricated elements;
 - reject negative, empty, reversed, and assembly-out-of-range coordinates with
   stable structured errors;
@@ -1073,7 +1077,7 @@ The design records these approved constraints:
    mappings, and search-level size
    policy. The renderer validates but never infers or repairs those decisions.
 4. The JSON 1.0 contract uses zero-based half-open coordinates, optional root
-   `label`, absolute gain copy number `>= 3`, optionally aggregated cohort CNV
+   `label`, known absolute gain copy number `>= 3` or explicit null, optionally aggregated cohort CNV
    segments, point-based links, explicit cohort counts, and no clone data.
 5. Rendering uses the specified multicolor chromosome ring, red gain and blue
    loss interval arcs plus markers, mint connections, deterministic overlap

@@ -1,6 +1,8 @@
 package org.mpg.circos.validation;
 
+import org.mpg.circos.assembly.AssemblyId;
 import org.mpg.circos.model.CircosPlot;
+import org.mpg.circos.model.SchemaVersion;
 import org.mpg.circos.model.CoordinateConvention;
 import org.mpg.circos.model.EventType;
 import org.mpg.circos.model.PlotMode;
@@ -11,6 +13,11 @@ import java.util.List;
 final class BusinessRulesValidator {
     List<ValidationError> validate(CircosPlot plot) {
         List<ValidationError> errors = new ArrayList<>();
+        if (plot.schemaVersion() == SchemaVersion.V1_0
+                && AssemblyId.from(plot.assemblyId()) == AssemblyId.T2T_CHM13) {
+            errors.add(new ValidationError("ASSEMBLY_VERSION_INVALID", "/assemblyId",
+                    "T2T-CHM13v2.0 requires Schema Version 2.0"));
+        }
         if (plot.coordinateConvention() != CoordinateConvention.ZERO_BASED_HALF_OPEN) {
             errors.add(new ValidationError("UNSUPPORTED_COORDINATE_CONVENTION", "/coordinateConvention",
                     "Only ZERO_BASED_HALF_OPEN is supported"));

@@ -16,6 +16,19 @@ import org.mpg.circos.model.SegmentDisplayType;
 
 class BusinessRulesValidatorTest {
     @Test
+    void typedApiRejectsT2tWithVersionOneContract() {
+        CircosApplication application = new CircosApplication();
+        CircosPlot valid = application.validate(TestFixtures.open("/examples/gains-and-losses.json"));
+        CircosPlot invalid = new CircosPlot(valid.schemaVersion(), valid.plotId(), valid.label(), valid.mode(),
+                "T2T-CHM13", valid.coordinateConvention(), valid.sourceResultIds(), valid.segments(), valid.links());
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> application.render(invalid));
+
+        assertTrue(exception.errors().stream().anyMatch(error ->
+                error.code().equals("ASSEMBLY_VERSION_INVALID") && error.path().equals("/assemblyId")));
+    }
+
+    @Test
     void acceptsCohortWithOneRepresentedSourceResult() {
         assertDoesNotThrow(() -> new CircosApplication()
                 .readAndValidate(TestFixtures.open("/examples/cohort-single-result.json")));
