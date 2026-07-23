@@ -47,7 +47,7 @@ class CircosCliTest {
         var err = new ByteArrayOutputStream();
 
         int status = CircosCli.run(new String[]{"--input",
-                        "src/test/resources/fixtures/invalid/gain-null-copy-number.json",
+                        "src/test/resources/fixtures/invalid/gain-copy-number-below-three.json",
                         "--output", output.toString()}, new PrintStream(out), new PrintStream(err));
 
         assertEquals(3, status);

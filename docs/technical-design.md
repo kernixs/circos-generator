@@ -74,7 +74,7 @@ is deliberately undecided and cannot change the rendering contract.
 
 Visual compatibility targets are:
 
-- GRCh37/hg19 and GRCh38/hg38; chromosomes 1-22, X, and Y;
+- GRCh37/hg19, GRCh38/hg38, and T2T-CHM13v2.0/hs1; chromosomes 1-22, X, and Y;
 - proportional, clockwise sectors starting at 90 degrees;
 - one-degree inter-sector gaps and the specified larger closing gap;
 - the chromosome colors and labels specified in section 6;
@@ -87,8 +87,8 @@ Visual compatibility targets are:
 The compatibility constants and formulas recorded in section 6 are normative.
 They will be represented as named, immutable rendering parameters and locked by
 deterministic structural and golden SVG tests maintained in this repository.
-Invalid coordinates, semantic identity, missing copy number, escaping, and
-explicit cohort aggregation intentionally supersede legacy behavior. If a
+Invalid coordinates, semantic identity, explicit unknown copy number, escaping,
+and explicit cohort aggregation intentionally supersede legacy behavior. If a
 future external reference conflicts with this document, this document controls
 until it is revised and approved.
 
@@ -464,14 +464,14 @@ versioned contract revision and separate approval.
 | `aggregate` | cohort aggregate object | no | A | Optional caller-defined aggregate metadata for cohort segments; forbidden in patient mode |
 | `label` | string | no | I | Tooltip/display metadata |
 
-V1 defines copy number as absolute integer copy number. For `gain`,
-`copyNumber` must be non-null and at least 3. Values below 3 are rejected with a
-domain-validation error; the renderer never reclassifies them or silently
-reverses radial bounds. For `loss`, copy number may be null because its visual
-appearance does not use the value. Unknown copy number never implies loss or
-numeric zero. A future caller using relative/log-ratio copy number requires a
-new documented contract convention rather than weakening this rule. Confidence
-is a bounded, display-safe
+Copy number is an optional absolute integer measurement. For `gain`, a known
+`copyNumber` must be at least 3; an explicitly unknown value is `null`. Values
+below 3 are rejected with a domain-validation error, and the renderer never
+reclassifies them or silently reverses radial bounds. For `loss`, copy number
+may also be null because visual geometry does not use the value. Unknown copy
+number never implies loss, numeric zero, or an inferred gain value. A future
+caller using relative/log-ratio copy number requires a new documented contract
+convention. Confidence is a bounded, display-safe
 opaque category rather than an invented numeric score; V1 preserves values such
 as `HIGH` and `MEDIUM` without assigning them an ordering.
 
@@ -598,6 +598,15 @@ actual source convention rather than infer it from examples.
 
 ## 5. Coordinate convention and assembly validation
 
+T2T input uses canonical assembly ID `T2T-CHM13` and is pinned to the
+T2T-CHM13v2.0 RefSeq assembly `GCF_009914755.1` (UCSC `hs1`). For compatibility
+with MPG normalization, `T2T`, `CHM13`, `CHM13v2`, and `CHM13v2.0` are defined
+by this API to mean that exact v2.0 assembly; other versions are not inferred.
+Its 24 primary
+chromosome lengths come from the NCBI Datasets assembled-molecule sequence
+report for that accession; mitochondrial and non-primary sequences are outside
+the supported chromosome scope.
+
 `CoordinateConvention.ZERO_BASED_HALF_OPEN` is the only supported Phase 1
 convention. It uses **zero-based, half-open** coordinates: `[start, end)`. This is
 unambiguous, composes cleanly with lengths, and represents a full chromosome as
@@ -664,11 +673,12 @@ height `0.085`, fill `#eeeeee`, a white border, and a white midline at `y=0.5`
 with line width 1.8.
 
 The gain track exists only when gain segments exist. It has y-range `[0,6]`,
-height `0.095`, gray background, and white border. Domain validation guarantees
-absolute integer copy number `v >= 3`. Its red `#d7191c` interval rectangle
-uses bottom `y=3.2` and top `y=max(3.2,min(5.8,v))`; this explicit V1 floor
-prevents reversed geometry for `v=3`. Its filled-circle marker is at
-`y=min(5.7,v+1.2)`, size 0.35. Null and values below 3 fail domain validation.
+height `0.095`, gray background, and white border. A known absolute integer copy
+number must satisfy `v >= 3`. Its red `#d7191c` interval rectangle uses bottom
+`y=3.2` and top `y=max(3.2,min(5.8,v))`; this explicit floor prevents reversed
+geometry for `v=3`. A null value renders only the minimum visible interval and a
+co-located baseline marker, without fabricating numeric metadata or placing the
+marker at the known-value position. Known values below 3 fail domain validation.
 
 The loss track exists only when loss segments exist. It has y-range `[0,3]`,
 height `0.095`, gray background, and white border. Its blue `#2c7bb6` interval
@@ -949,9 +959,9 @@ test lifecycle.
   patient/cohort aggregate placement;
 - require exactly one represented source result in patient mode and one or more
   in cohort mode, including a cohort-search fixture with one represented result;
-- verify null copy number remains null and is valid only for allowed event
-  types; reject omitted copy number, null gain values, non-integral values, and
-  every gain value below the absolute-copy-number minimum of 3;
+- verify null copy number remains null for gain and loss, renders with no
+  fabricated numeric metadata, and reject omitted copy number, non-integral
+  values, and every known gain value below the absolute-copy-number minimum of 3;
 - accept empty arrays/categories without exceptions or fabricated elements;
 - reject negative, empty, reversed, and assembly-out-of-range coordinates with
   stable structured errors;
@@ -1067,7 +1077,7 @@ The design records these approved constraints:
    mappings, and search-level size
    policy. The renderer validates but never infers or repairs those decisions.
 4. The JSON 1.0 contract uses zero-based half-open coordinates, optional root
-   `label`, absolute gain copy number `>= 3`, optionally aggregated cohort CNV
+   `label`, known absolute gain copy number `>= 3` or explicit null, optionally aggregated cohort CNV
    segments, point-based links, explicit cohort counts, and no clone data.
 5. Rendering uses the specified multicolor chromosome ring, red gain and blue
    loss interval arcs plus markers, mint connections, deterministic overlap

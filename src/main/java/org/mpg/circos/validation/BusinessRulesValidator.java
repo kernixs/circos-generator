@@ -1,6 +1,8 @@
 package org.mpg.circos.validation;
 
+import org.mpg.circos.assembly.AssemblyId;
 import org.mpg.circos.model.CircosPlot;
+import org.mpg.circos.model.SchemaVersion;
 import org.mpg.circos.model.CoordinateConvention;
 import org.mpg.circos.model.EventType;
 import org.mpg.circos.model.PlotMode;
@@ -11,6 +13,10 @@ import java.util.List;
 final class BusinessRulesValidator {
     List<ValidationError> validate(CircosPlot plot) {
         List<ValidationError> errors = new ArrayList<>();
+        if (plot.schemaVersion() == SchemaVersion.V1_0 && isT2t(plot.assemblyId())) {
+            errors.add(new ValidationError("ASSEMBLY_VERSION_INVALID", "/assemblyId",
+                    "T2T-CHM13v2.0 requires Schema Version 2.0"));
+        }
         if (plot.coordinateConvention() != CoordinateConvention.ZERO_BASED_HALF_OPEN) {
             errors.add(new ValidationError("UNSUPPORTED_COORDINATE_CONVENTION", "/coordinateConvention",
                     "Only ZERO_BASED_HALF_OPEN is supported"));
@@ -56,9 +62,10 @@ final class BusinessRulesValidator {
                         "segment eventType must be gain or loss"));
                 continue;
             }
-            if (segment.eventType() == EventType.GAIN && (segment.copyNumber() == null || segment.copyNumber() < 3)) {
+            if (segment.eventType() == EventType.GAIN
+                    && segment.copyNumber() != null && segment.copyNumber() < 3) {
                 errors.add(new ValidationError("GAIN_COPY_NUMBER_INVALID", "/segments/" + i + "/copyNumber",
-                        "absolute gain copyNumber must be at least 3"));
+                        "known absolute gain copyNumber must be at least 3"));
             }
             if (segment.displayType() != null && segment.displayType().geometryType() != segment.eventType()) {
                 errors.add(new ValidationError("SEGMENT_DISPLAY_TYPE_INVALID", "/segments/" + i + "/displayType",
@@ -69,6 +76,14 @@ final class BusinessRulesValidator {
             }
         }
         return errors;
+    }
+
+    private boolean isT2t(String assemblyId) {
+        try {
+            return AssemblyId.from(assemblyId) == AssemblyId.T2T_CHM13;
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
     }
 
     private void validateAggregate(org.mpg.circos.model.CohortAggregate aggregate, String path,

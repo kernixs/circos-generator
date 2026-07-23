@@ -36,6 +36,15 @@ class SemanticSvgRendererTest {
     }
 
     @Test
+    void rendersUnknownGainCopyNumberWithoutInventingMetadata() throws Exception {
+        Document document = parse(new CircosApplication()
+                .render(TestFixtures.open("/examples/gain-unknown-copy-number.json")).xml());
+        var segment = firstWithClass(document, "circos-segment");
+        assertEquals("gain", segment.getAttribute("data-event-type"));
+        assertFalse(segment.hasAttribute("data-copy-number"));
+    }
+
+    @Test
     void emitsVersionTwoIntervalEndpointsAndMidpointPolicy() throws Exception {
         Document document = parse(new CircosApplication()
                 .render(TestFixtures.open("/examples/v2-interval-links.json")).xml());

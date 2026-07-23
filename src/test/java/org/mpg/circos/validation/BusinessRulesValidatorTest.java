@@ -16,9 +16,38 @@ import org.mpg.circos.model.SegmentDisplayType;
 
 class BusinessRulesValidatorTest {
     @Test
+    void typedApiRejectsT2tWithVersionOneContract() {
+        CircosApplication application = new CircosApplication();
+        CircosPlot valid = application.validate(TestFixtures.open("/examples/gains-and-losses.json"));
+        CircosPlot invalid = new CircosPlot(valid.schemaVersion(), valid.plotId(), valid.label(), valid.mode(),
+                "T2T-CHM13", valid.coordinateConvention(), valid.sourceResultIds(), valid.segments(), valid.links());
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> application.render(invalid));
+
+        assertTrue(exception.errors().stream().anyMatch(error ->
+                error.code().equals("ASSEMBLY_VERSION_INVALID") && error.path().equals("/assemblyId")));
+    }
+
+    @Test
+    void unsupportedTypedAssemblyDoesNotEscapeBusinessRulesValidation() {
+        CircosApplication application = new CircosApplication();
+        CircosPlot valid = application.validate(TestFixtures.open("/examples/gains-and-losses.json"));
+        CircosPlot invalid = new CircosPlot(valid.schemaVersion(), valid.plotId(), valid.label(), valid.mode(),
+                "custom", valid.coordinateConvention(), valid.sourceResultIds(), valid.segments(), valid.links());
+
+        assertDoesNotThrow(() -> new BusinessRulesValidator().validate(invalid));
+    }
+
+    @Test
     void acceptsCohortWithOneRepresentedSourceResult() {
         assertDoesNotThrow(() -> new CircosApplication()
                 .readAndValidate(TestFixtures.open("/examples/cohort-single-result.json")));
+    }
+
+    @Test
+    void acceptsGainWithExplicitlyUnknownCopyNumber() {
+        assertDoesNotThrow(() -> new CircosApplication()
+                .readAndValidate(TestFixtures.open("/examples/gain-unknown-copy-number.json")));
     }
 
     @Test
@@ -90,7 +119,6 @@ class BusinessRulesValidatorTest {
                 Arguments.of("/fixtures/invalid/patient-with-aggregate.json"),
                 Arguments.of("/fixtures/invalid/cohort-without-aggregate.json"),
                 Arguments.of("/fixtures/invalid/inconsistent-aggregate-counts.json"),
-                Arguments.of("/fixtures/invalid/gain-null-copy-number.json"),
                 Arguments.of("/fixtures/invalid/gain-copy-number-below-three.json"));
     }
 }

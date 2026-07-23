@@ -266,7 +266,7 @@ Only prototype rows with `findingType = "CNV/SV"` are segment-eligible:
 | `chromosome` | `chromosome` |
 | `start`, `end` | `start_pos`, `end_pos` |
 | `eventType` | normalized gain or loss from `event_type` |
-| `copyNumber` | strictly parsed integer from `copy_number`, or null for loss |
+| `copyNumber` | strictly parsed absolute integer from `copy_number`, or null when unknown |
 | `confidence` | optional enrichment; absent from the prototype row today |
 | `label` | optional non-clinical label, such as the selected gene annotation |
 

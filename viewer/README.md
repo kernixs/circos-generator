@@ -22,12 +22,18 @@ sample and event counts, methods, aggregation descriptions, and escaped
 additional key/value metadata are shown when present. An aggregation based on
 identical V2 endpoints is displayed as **Aggregation: Exact genomic intervals**.
 
-The dependency-free public API is available as `window.CircosViewer`:
+Maven consumers can load the exact packaged script and required styles with
+`org.mpg.circos.viewer.CircosViewerAssets.javascript()` and
+`CircosViewerAssets.stylesheet()`. The dependency-free browser API is available as `window.CircosViewer`:
 
 - `attach(container, svgElement)` enhances an existing inline semantic SVG.
 - `mount(container, svgText)` parses, inserts, and enhances SVG text.
 - `load(container, url)` asynchronously fetches, inserts, and enhances a
   generated SVG.
+
+These APIs accept only trusted semantic SVG produced by `circos-generator`.
+They do not sanitize arbitrary or user-supplied SVG; hosts that accept untrusted
+SVG must sanitize it before calling `attach()`, `mount()`, or `load()`.
 
 `attach()` and `mount()` return a container-scoped controller immediately.
 `load()` returns a `Promise` that resolves to the same controller after the SVG

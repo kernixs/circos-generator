@@ -26,6 +26,17 @@ class CircularLayoutEngineTest {
     }
 
     @Test
+    void unknownGainMarkerUsesTheUnknownValueBaseline() {
+        var plot = new CircosApplication().validate(TestFixtures.open("/examples/gain-unknown-copy-number.json"));
+        var assembly = new ClasspathAssemblyRepository().load(plot.assemblyId());
+        var geometry = new CircularLayoutEngine().layout(plot, assembly);
+        var marker = geometry.segments().getFirst().marker();
+        double markerRadius = Math.hypot(marker.x() - geometry.centerX(), marker.y() - geometry.centerY());
+
+        assertEquals(geometry.tracks().gainTrack().innerRadius() + 0.375, markerRadius, 1e-9);
+    }
+
+    @Test
     void versionTwoUsesIntervalBoundariesAndMidpointAnchors() {
         var plot = new CircosApplication().validate(TestFixtures.open("/examples/v2-interval-links.json"));
         var assembly = new ClasspathAssemblyRepository().load(plot.assemblyId());

@@ -6,7 +6,7 @@
 
   <groupId>org.mpg</groupId>
   <artifactId>circos-generator</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -44,6 +44,19 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>viewer</directory>
+        <includes>
+          <include>circos-viewer.js</include>
+          <include>circos-viewer.css</include>
+        </includes>
+        <targetPath>org/mpg/circos/viewer</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

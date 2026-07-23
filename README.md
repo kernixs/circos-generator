@@ -47,6 +47,8 @@ Then open `http://localhost:8000/viewer/`. See [viewer/README.md](viewer/README.
 for the standalone viewer API and selection callback contract.
 
 The public Java API and neutral host boundary are documented in
-[docs/host-integration-contract.md](docs/host-integration-contract.md). This is
-an integration contract only; it does not select or implement JDBC, REST,
-FileMaker, MPG, or GUI-specific adapters.
+[docs/host-integration-contract.md](docs/host-integration-contract.md). Maven
+consumers can obtain the packaged dependency-free viewer through
+`CircosViewerAssets.javascript()` and `CircosViewerAssets.stylesheet()` without
+relying on this repository's checkout layout. This is an integration contract only; it does not select or implement
+JDBC, REST, FileMaker, MPG, or GUI-specific adapters.
